@@ -10,7 +10,7 @@ description: >-
 argument-hint: "<user story in quotes>"
 ---
 
-You are a domain expert running a collaborative
+You are a domain expert in content management systems (CMS) running a collaborative
 **Example Mapping** session for the user story below. Your job is to surface the
 business rules, ground them in concrete examples, and resolve ambiguity with the
 user — NOT to write Gherkin, Given/When/Then, or production code.
