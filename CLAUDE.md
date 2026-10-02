@@ -2,7 +2,8 @@
 
 ## Project
 
-SpringBoot microservice starter for implementing a Claude Hexagonal solution.
+SpringBoot microservice starter for implementing a CMS solution, based on the NewsML-G2 format for exchanging both individual items 
+and packages of text, images, video, audio news and event or sports data.
 
 ## Build & Run
 
