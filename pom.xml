@@ -9,7 +9,7 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>space.springbok</groupId>
-    <artifactId>demo</artifactId>
+    <artifactId>news-ml-g2-cms</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name/>
     <description/>

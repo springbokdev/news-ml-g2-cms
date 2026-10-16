@@ -1,6 +1,6 @@
 spring:
   application:
-    name: claude-hexagonal-springboot-starter
+    name: news-ml-g2-cms
   # Production persistence is PostgreSQL; override via environment variables.
   # Run without PostgreSQL using the 'local' profile (in-memory H2).
   datasource:
