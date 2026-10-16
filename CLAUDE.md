@@ -91,3 +91,11 @@ Factory Method (creating items by item class), Adapter (already the basis of hex
 * Use `@Mapping` to configure the mapping between the two fields.
 * After modifying a Mapper, recompile the project to generate the new Mapper implementation.
 * Use Mappers to update existing entities.
+
+## API Contracts
+OpenAPI specs are in doc/api/.
+When writing controllers or acceptance tests,
+ALWAYS read the relevant OpenAPI spec first.
+Endpoints, request/response schemas, and status
+codes MUST match the contract exactly.
+Do NOT invent endpoints or change field names.
