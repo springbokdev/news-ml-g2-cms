@@ -98,4 +98,9 @@ Creating an item returns its GUID and version. Partners fetch the XML separately
 - **Body:** XHTML `<p>` paragraphs in `inlineXML`, split on blank lines.
 - **Standard:** NewsML-G2 2.34.
 - **Delivery:** creating returns the GUID and version; the XML is fetched by GUID.
+- **Persistence:** accepted article content (headline, body, language) is stored in the
+  database; rejected content is never stored. Retrieval by GUID (last rule) proves this
+  through the API.
+- **Where rules are enforced:** required-field and format rules live in the domain, so every
+  entry point applies them; the web layer maps the domain exception to a 400 naming the field.
 - **Out of scope:** updates and incrementing the version, withheld/draft workflow, sending items to partners, packages, and non-text media (images, video, audio).

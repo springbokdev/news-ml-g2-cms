@@ -1,5 +1,6 @@
 package space.springbok.example.newsitem.adapter.in.web;
 
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -22,7 +23,7 @@ class NewsItemController {
 
     @PostMapping("/api/news-items")
     @ResponseStatus(HttpStatus.CREATED)
-    void createNewsItem(@RequestBody CreateNewsItemRequest request) {
+    void createNewsItem(@Valid @RequestBody CreateNewsItemRequest request) {
         createNewsItemUseCase.createNewsItem(
                 new CreateNewsItemCommand(request.headline(), request.body(), request.language()));
     }
