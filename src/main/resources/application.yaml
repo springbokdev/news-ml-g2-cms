@@ -1,3 +1,14 @@
 spring:
   application:
     name: claude-hexagonal-springboot-starter
+  # Production persistence is PostgreSQL; override via environment variables.
+  # Run without PostgreSQL using the 'local' profile (in-memory H2).
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/demo_app}
+    username: ${DB_USERNAME:demo_app}
+    password: ${DB_PASSWORD:demo_app}
+  jpa:
+    # Flyway owns the schema; Hibernate only checks the mappings against it.
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false

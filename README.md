@@ -60,6 +60,7 @@ The project includes a PostToolUse hook that automatically runs `mvn test` after
 ./mvnw verify                            # Unit + acceptance tests
 ./mvnw -Dtest=DemoApplicationTest test # Single test class
 ./mvnw spring-boot:run                   # Run the app (needs PostgreSQL)
+./mvnw spring-boot:run -Dspring-boot.run.profiles=local  # Run on in-memory H2, no PostgreSQL
 ./mvnw clean package                     # Build the JAR
 ```
 
@@ -75,6 +76,28 @@ docker run --name demo-app-pg -e POSTGRES_DB=demo_app \
 ```
 
 Tests don't need this — they run against H2 in PostgreSQL compatibility mode.
+
+### Running locally without PostgreSQL
+
+The `local` profile runs the app on in-memory H2 in PostgreSQL compatibility mode
+(`src/main/resources/application-local.yaml`). Flyway creates the schema at startup;
+data is lost when the app stops.
+
+```bash
+./mvnw spring-boot:run -Dspring-boot.run.profiles=local
+```
+
+To browse the data, open the H2 console at http://localhost:8080/h2-console (enabled only
+in the `local` profile) and connect with:
+
+| Field | Value |
+|---|---|
+| Driver Class | `org.h2.Driver` |
+| JDBC URL | `jdbc:h2:mem:newsml;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH` |
+| User Name | `sa` |
+| Password | *(empty)* |
+
+Use the full JDBC URL — it must match the settings the app opened the database with.
 
 ### With Claude Code
 
