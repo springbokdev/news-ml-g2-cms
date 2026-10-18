@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import space.springbok.example.newsitem.application.port.in.CreateNewsItemCommand;
 import space.springbok.example.newsitem.application.port.in.CreateNewsItemUseCase;
-import space.springbok.example.newsitem.domain.model.MissingRequiredFieldException;
+import space.springbok.example.newsitem.domain.model.InvalidArticleFieldException;
 
 @RestController
 class NewsItemController {
@@ -28,8 +28,8 @@ class NewsItemController {
                 new CreateNewsItemCommand(request.headline(), request.body(), request.language()));
     }
 
-    @ExceptionHandler(MissingRequiredFieldException.class)
-    ProblemDetail missingRequiredField(MissingRequiredFieldException exception) {
+    @ExceptionHandler(InvalidArticleFieldException.class)
+    ProblemDetail invalidArticleField(InvalidArticleFieldException exception) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, exception.getMessage());
         problem.setProperty("field", exception.field());
         return problem;

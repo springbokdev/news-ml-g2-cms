@@ -15,6 +15,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import space.springbok.example.newsitem.application.port.in.CreateNewsItemCommand;
 import space.springbok.example.newsitem.application.port.in.CreateNewsItemUseCase;
+import space.springbok.example.newsitem.domain.model.InvalidLanguageTagException;
 import space.springbok.example.newsitem.domain.model.MissingRequiredFieldException;
 
 @WebMvcTest(NewsItemController.class)
@@ -63,5 +64,25 @@ class NewsItemControllerTest {
                 .hasStatus(HttpStatus.BAD_REQUEST)
                 .bodyJson()
                 .extractingPath("$.field").isEqualTo("headline");
+    }
+
+    @Test
+    @DisplayName("The one where the language is not a valid language tag, and the response is a 400 naming the language")
+    void invalidLanguageTagIsBadRequestNamingTheField() {
+        willThrow(new InvalidLanguageTagException("language"))
+                .given(createNewsItemUseCase).createNewsItem(any(CreateNewsItemCommand.class));
+
+        assertThat(mvc.post().uri("/api/news-items")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                          "headline": "Floods hit Cape Town",
+                          "body": "Rain fell.\\n\\nRoads closed.\\n\\nSchools shut.",
+                          "language": "english"
+                        }
+                        """))
+                .hasStatus(HttpStatus.BAD_REQUEST)
+                .bodyJson()
+                .extractingPath("$.field").isEqualTo("language");
     }
 }

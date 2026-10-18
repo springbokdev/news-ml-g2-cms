@@ -100,4 +100,62 @@ class NewsItemAcceptanceIT {
                     .andExpect(jsonPath("$.field").value("language"));
         }
     }
+
+    @Nested
+    @DisplayName("Must accept the language only as a well-formed BCP 47 tag")
+    class MustAcceptLanguageOnlyAsWellFormedBcp47Tag {
+
+        @Test
+        @DisplayName("The one where the language is en, and the article is accepted")
+        void languageIsEn() throws Exception {
+            String requestBody = """
+                    {
+                      "headline": "Floods hit Cape Town",
+                      "body": "Rain fell.\\n\\nRoads closed.\\n\\nSchools shut.",
+                      "language": "en"
+                    }
+                    """;
+
+            mockMvc.perform(post("/api/news-items")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(requestBody))
+                    .andExpect(status().isCreated());
+        }
+
+        @Test
+        @DisplayName("The one where the language is zu-ZA (language plus region), and the article is accepted")
+        void languageIsZuZa() throws Exception {
+            String requestBody = """
+                    {
+                      "headline": "Floods hit Cape Town",
+                      "body": "Rain fell.\\n\\nRoads closed.\\n\\nSchools shut.",
+                      "language": "zu-ZA"
+                    }
+                    """;
+
+            mockMvc.perform(post("/api/news-items")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(requestBody))
+                    .andExpect(status().isCreated());
+        }
+
+        @Test
+        @DisplayName("The one where the language is english, and the article is rejected: not a valid language tag")
+        void languageIsEnglish() throws Exception {
+            String requestBody = """
+                    {
+                      "headline": "Floods hit Cape Town",
+                      "body": "Rain fell.\\n\\nRoads closed.\\n\\nSchools shut.",
+                      "language": "english"
+                    }
+                    """;
+
+            mockMvc.perform(post("/api/news-items")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(requestBody))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.field").value("language"))
+                    .andExpect(jsonPath("$.detail").value("language is not a valid language tag"));
+        }
+    }
 }
