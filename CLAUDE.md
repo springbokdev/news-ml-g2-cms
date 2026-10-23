@@ -24,15 +24,6 @@ overridable via `DB_URL` / `DB_USERNAME` / `DB_PASSWORD`. (Local-run setup is in
 
 ## Coding Conventions
 
-### Money
-BigDecimal for ALL monetary values. NEVER float, double, or int.
-Always explicit RoundingMode. RoundingMode.HALF_EVEN, scale 2.
-BigDecimal.valueOf() or new BigDecimal("...") — NEVER new BigDecimal(double).
-
-### Java 25
-Records for value objects, sealed interfaces, pattern matching.
-No Lombok — records replace it.
-
 ### REST & Spring
 Constructor injection only (no field @Autowired).
 @Valid on request bodies. 201 create, 200 query, 400 validation, 404 not found.
@@ -73,14 +64,38 @@ Domain NEVER imports org.springframework or jakarta.persistence.
 Controllers NEVER contain business logic.
 Dependencies flow inward: adapter → application → domain.
 
+## Design Principles
+SOLID applies to all production code:
+- SRP: one reason to change per class. Split domain services by business rule.
+- OCP: add behaviour through new types (Strategy, polymorphism), not by growing switch/if chains.
+- LSP: subtypes keep their parent's contracts. No UnsupportedOperationException overrides.
+- ISP: keep ports in application/port/in and port/out narrow (one use case per in-port).
+- DIP: the domain depends only on its own abstractions. Adapters implement ports.
+
+GoF patterns: use one only when the problem actually calls for it, and name it in the class
+(e.g. `PricingStrategy`, `NewsItemFactory`). Never add a pattern just in case.
+Likely fits here: Strategy (per-media-type rules for text, image, video, etc.),
+Composite (NewsML-G2 packages that contain items), Builder (complex items),
+Factory Method (creating items by item class), Adapter (already the basis of hexagonal).
+
 ## Use Project Lombok
+* Do not use Lombok in domain classes. Domain classes should be pure Java, with no framework dependencies.
 * Use Lombok to reduce boilerplate code.
 * Enable annotation processing for your IDE to generate boilerplate code for you.
 * When adding builder to a class, if the class extends another class, add `@SuperBuilder`for the builder.
 
 ## Use Mapstruct for Type Conversions
+* Do not use Mapstruct in domain classes. Domain classes should be pure Java, with no framework dependencies.
 * Use Mapstruct to convert between domain objects and DTOs.
 * Use `@Mapper` to configure the mapping between the two classes.
 * Use `@Mapping` to configure the mapping between the two fields.
 * After modifying a Mapper, recompile the project to generate the new Mapper implementation.
 * Use Mappers to update existing entities.
+
+## API Contracts
+OpenAPI specs are in doc/api/.
+When writing controllers or acceptance tests,
+ALWAYS read the relevant OpenAPI spec first.
+Endpoints, request/response schemas, and status
+codes MUST match the contract exactly.
+Do NOT invent endpoints or change field names.

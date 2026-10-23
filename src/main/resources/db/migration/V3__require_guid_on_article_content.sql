@@ -1,0 +1,1 @@
+ALTER TABLE article_content ALTER COLUMN guid SET NOT NULL;

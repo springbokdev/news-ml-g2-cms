@@ -1,0 +1,2 @@
+ALTER TABLE article_content ADD COLUMN version INTEGER NOT NULL DEFAULT 1;
+ALTER TABLE article_content ALTER COLUMN version DROP DEFAULT;
