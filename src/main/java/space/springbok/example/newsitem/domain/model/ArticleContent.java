@@ -10,6 +10,8 @@ import java.util.regex.Pattern;
  */
 public record ArticleContent(NewsItemGuid guid, String headline, String body, String language) {
 
+    private static final int INITIAL_VERSION = 1;
+
     private static final Pattern BCP_47_TAG = Pattern.compile(
             "^[A-Za-z]{2,3}(-[A-Za-z]{4})?(-([A-Za-z]{2}|[0-9]{3}))?(-([A-Za-z0-9]{5,8}|[0-9][A-Za-z0-9]{3}))*$");
 
@@ -25,6 +27,10 @@ public record ArticleContent(NewsItemGuid guid, String headline, String body, St
                                         String provider, LocalDate creationDate, String uniqueId) {
         return new ArticleContent(
                 NewsItemGuid.create(provider, creationDate, uniqueId), headline, body, language);
+    }
+
+    public int version() {
+        return INITIAL_VERSION;
     }
 
     private static void requireWellFormedLanguageTag(String language) {

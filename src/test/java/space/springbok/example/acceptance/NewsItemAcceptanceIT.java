@@ -244,4 +244,46 @@ class NewsItemAcceptanceIT {
             return JsonPath.read(response, "$.guid");
         }
     }
+
+    @Nested
+    @DisplayName("Must give a newly created news item version 1")
+    class MustGiveNewlyCreatedNewsItemVersionOne {
+
+        @Test
+        @DisplayName("The one where a new article is created, and its version is 1")
+        void newArticleHasVersionOne() throws Exception {
+            String requestBody = """
+                    {
+                      "headline": "Floods hit Cape Town",
+                      "body": "Rain fell.\\n\\nRoads closed.\\n\\nSchools shut.",
+                      "language": "en"
+                    }
+                    """;
+
+            mockMvc.perform(post("/api/news-items")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(requestBody))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.version").value(1));
+        }
+
+        @Test
+        @DisplayName("The one where the journalist supplies version 5 on creation, and the item still gets version 1")
+        void journalistSuppliedVersionIsIgnored() throws Exception {
+            String requestBody = """
+                    {
+                      "version": 5,
+                      "headline": "Floods hit Cape Town",
+                      "body": "Rain fell.\\n\\nRoads closed.\\n\\nSchools shut.",
+                      "language": "en"
+                    }
+                    """;
+
+            mockMvc.perform(post("/api/news-items")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(requestBody))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.version").value(1));
+        }
+    }
 }

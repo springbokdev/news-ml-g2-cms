@@ -69,4 +69,19 @@ class ArticleContentTest {
             assertThat(article.guid().value()).isEqualTo("urn:newsml:springbok.space:20261016:3f2b9c1e");
         }
     }
+
+    @Nested
+    @DisplayName("Must give a newly created news item version 1")
+    class MustGiveNewlyCreatedNewsItemVersionOne {
+
+        @Test
+        @DisplayName("The one where a new article is created, and its version is 1")
+        void newArticleHasVersionOne() {
+            ArticleContent article = ArticleContent.create(
+                    "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
+                    "springbok.space", LocalDate.of(2026, 10, 16), "3f2b9c1e");
+
+            assertThat(article.version()).isEqualTo(1);
+        }
+    }
 }

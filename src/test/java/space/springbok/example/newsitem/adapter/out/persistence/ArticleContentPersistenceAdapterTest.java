@@ -56,6 +56,19 @@ class ArticleContentPersistenceAdapterTest {
     }
 
     @Test
+    @DisplayName("The one where article content is saved, and its version 1 is stored")
+    void savedArticleContentVersionIsStored() {
+        adapter.save(ArticleContent.create(
+                "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
+                "springbok.space", LocalDate.of(2026, 10, 16), "3f2b9c1e"));
+
+        assertThat(repository.findAll())
+                .singleElement()
+                .extracting(ArticleContentEntity::getVersion)
+                .isEqualTo(1);
+    }
+
+    @Test
     @DisplayName("The one where two articles share a GUID, and the second one is rejected by the database")
     void duplicateGuidIsRejected() {
         ArticleContentEntity first = new ArticleContentEntity();
