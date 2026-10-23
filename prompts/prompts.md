@@ -13,6 +13,6 @@ Requirements:
 - Include request/response schemas
 - Follow existing API conventions from CLAUDE.md
 ------------------------------------
-/accept "Must accept the language only as a well-formed BCP 47 tag"
+/accept "Must give every new news item a globally unique GUID"
 @doc/specs/create-news-item.md
 @doc/api/news-items.yaml
