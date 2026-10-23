@@ -1,6 +1,6 @@
 package space.springbok.example.newsitem.domain.model;
 
-import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.Objects;
 import java.util.regex.Pattern;
 
@@ -8,7 +8,8 @@ import java.util.regex.Pattern;
  * The journalist's article content, and the aggregate root of a news item: it owns the
  * GUID the system gives the item when it is created.
  */
-public record ArticleContent(NewsItemGuid guid, String headline, String body, String language) {
+public record ArticleContent(NewsItemGuid guid, String headline, String body, String language,
+                             OffsetDateTime versionCreated) {
 
     private static final int INITIAL_VERSION = 1;
 
@@ -24,9 +25,9 @@ public record ArticleContent(NewsItemGuid guid, String headline, String body, St
     }
 
     public static ArticleContent create(String headline, String body, String language,
-                                        String provider, LocalDate creationDate, String uniqueId) {
+                                        String provider, OffsetDateTime createdAt, String uniqueId) {
         return new ArticleContent(
-                NewsItemGuid.create(provider, creationDate, uniqueId), headline, body, language);
+                NewsItemGuid.create(provider, createdAt.toLocalDate(), uniqueId), headline, body, language, createdAt);
     }
 
     public int version() {

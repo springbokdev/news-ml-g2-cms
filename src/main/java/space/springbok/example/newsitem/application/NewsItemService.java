@@ -1,7 +1,7 @@
 package space.springbok.example.newsitem.application;
 
 import java.time.Clock;
-import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -29,7 +29,7 @@ class NewsItemService implements CreateNewsItemUseCase {
     public NewsItemGuid createNewsItem(CreateNewsItemCommand command) {
         ArticleContent articleContent = ArticleContent.create(
                 command.headline(), command.body(), command.language(),
-                provider, LocalDate.now(clock), UUID.randomUUID().toString());
+                provider, OffsetDateTime.now(clock), UUID.randomUUID().toString());
         saveArticleContentPort.save(articleContent);
         return articleContent.guid();
     }

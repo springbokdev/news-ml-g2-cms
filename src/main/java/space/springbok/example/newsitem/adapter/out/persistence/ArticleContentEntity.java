@@ -6,10 +6,14 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.TimeZoneColumn;
+import org.hibernate.annotations.TimeZoneStorage;
+import org.hibernate.annotations.TimeZoneStorageType;
 
 @Entity
 @Table(name = "article_content")
@@ -36,4 +40,9 @@ class ArticleContentEntity {
 
     @Column(nullable = false)
     private int version;
+
+    @Column(name = "version_created", nullable = false)
+    @TimeZoneStorage(TimeZoneStorageType.COLUMN)
+    @TimeZoneColumn(name = "version_created_offset")
+    private OffsetDateTime versionCreated;
 }

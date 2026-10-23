@@ -15,7 +15,7 @@ public record NewsItemGuid(String value) {
 
     public NewsItemGuid {
         if (value == null || !FORMAT.matcher(value).matches()) {
-            throw new IllegalArgumentException("not a well-formed news item GUID");
+            throw new MalformedNewsItemGuidException();
         }
     }
 

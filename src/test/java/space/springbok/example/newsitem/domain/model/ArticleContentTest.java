@@ -3,7 +3,7 @@ package space.springbok.example.newsitem.domain.model;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -32,7 +32,7 @@ class ArticleContentTest {
         void missingRequiredFieldIsRejected(String expectedField, String condition,
                                             String headline, String body, String language) {
             assertThatThrownBy(() -> ArticleContent.create(headline, body, language,
-                    "springbok.space", LocalDate.of(2026, 10, 16), "3f2b9c1e"))
+                    "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e"))
                     .isInstanceOf(MissingRequiredFieldException.class)
                     .extracting("field")
                     .isEqualTo(expectedField);
@@ -48,7 +48,7 @@ class ArticleContentTest {
         void malformedLanguageTagIsRejected(String language) {
             assertThatThrownBy(() -> ArticleContent.create(
                     "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", language,
-                    "springbok.space", LocalDate.of(2026, 10, 16), "3f2b9c1e"))
+                    "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e"))
                     .isInstanceOf(InvalidLanguageTagException.class)
                     .extracting("field")
                     .isEqualTo("language");
@@ -64,7 +64,7 @@ class ArticleContentTest {
         void guidIsGeneratedWhenTheArticleIsCreated() {
             ArticleContent article = ArticleContent.create(
                     "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
-                    "springbok.space", LocalDate.of(2026, 10, 16), "3f2b9c1e");
+                    "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
 
             assertThat(article.guid().value()).isEqualTo("urn:newsml:springbok.space:20261016:3f2b9c1e");
         }
@@ -79,9 +79,24 @@ class ArticleContentTest {
         void newArticleHasVersionOne() {
             ArticleContent article = ArticleContent.create(
                     "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
-                    "springbok.space", LocalDate.of(2026, 10, 16), "3f2b9c1e");
+                    "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
 
             assertThat(article.version()).isEqualTo(1);
+        }
+    }
+
+    @Nested
+    @DisplayName("Must populate the mandatory NewsML-G2 metadata on every news item")
+    class MustPopulateMandatoryNewsMlG2Metadata {
+
+        @Test
+        @DisplayName("The one where an article is created at 2026-03-01T14:05:09-05:00, and its versionCreated is that instant with that offset")
+        void versionCreatedIsTheCreationTimestamp() {
+            ArticleContent article = ArticleContent.create(
+                    "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
+                    "springbok.space", OffsetDateTime.parse("2026-03-01T14:05:09-05:00"), "3f2b9c1e");
+
+            assertThat(article.versionCreated()).isEqualTo(OffsetDateTime.parse("2026-03-01T14:05:09-05:00"));
         }
     }
 }
