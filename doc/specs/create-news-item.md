@@ -29,6 +29,7 @@ A value that contains only whitespace counts as blank.
 
 ### Rule: Must give every new news item a globally unique GUID
 
+The GUID is returned in the response to the create request and is used to retrieve the news item later.
 The GUID is a URN made from the configured provider, the creation date and a unique part:
 `urn:newsml:<provider>:<yyyyMMdd>:<unique-id>`.
 
@@ -93,6 +94,7 @@ Creating an item returns its GUID and version. Partners fetch the XML separately
 
 - **Required inputs:** headline, body and a BCP 47 language tag.
 - **GUID:** `urn:newsml:<provider>:<yyyyMMdd>:<unique-id>`, always assigned by the system.
+  `ArticleContent` is the aggregate root and owns the GUID, which is generated when it is created.
 - **Provider:** taken from configuration, with springbok.space as the default; one provider per deployment.
 - **pubStatus:** new items are `stat:usable`.
 - **Body:** XHTML `<p>` paragraphs in `inlineXML`, split on blank lines.

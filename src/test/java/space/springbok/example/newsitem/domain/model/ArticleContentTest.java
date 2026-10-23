@@ -1,10 +1,13 @@
 package space.springbok.example.newsitem.domain.model;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import java.time.LocalDate;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -28,7 +31,8 @@ class ArticleContentTest {
         @MethodSource("missingRequiredFields")
         void missingRequiredFieldIsRejected(String expectedField, String condition,
                                             String headline, String body, String language) {
-            assertThatThrownBy(() -> new ArticleContent(headline, body, language))
+            assertThatThrownBy(() -> ArticleContent.create(headline, body, language,
+                    "springbok.space", LocalDate.of(2026, 10, 16), "3f2b9c1e"))
                     .isInstanceOf(MissingRequiredFieldException.class)
                     .extracting("field")
                     .isEqualTo(expectedField);
@@ -42,11 +46,27 @@ class ArticleContentTest {
         @ParameterizedTest(name = "The one where the language is {0}, and the article is rejected: not a valid language tag")
         @ValueSource(strings = {"english"})
         void malformedLanguageTagIsRejected(String language) {
-            assertThatThrownBy(() -> new ArticleContent(
-                    "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", language))
+            assertThatThrownBy(() -> ArticleContent.create(
+                    "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", language,
+                    "springbok.space", LocalDate.of(2026, 10, 16), "3f2b9c1e"))
                     .isInstanceOf(InvalidLanguageTagException.class)
                     .extracting("field")
                     .isEqualTo("language");
+        }
+    }
+
+    @Nested
+    @DisplayName("Must give every new news item a globally unique GUID")
+    class MustGiveEveryNewNewsItemGloballyUniqueGuid {
+
+        @Test
+        @DisplayName("The one where an article is created on 16 Oct 2026 by provider springbok.space, and its GUID is urn:newsml:springbok.space:20261016:<unique-id>")
+        void guidIsGeneratedWhenTheArticleIsCreated() {
+            ArticleContent article = ArticleContent.create(
+                    "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
+                    "springbok.space", LocalDate.of(2026, 10, 16), "3f2b9c1e");
+
+            assertThat(article.guid().value()).isEqualTo("urn:newsml:springbok.space:20261016:3f2b9c1e");
         }
     }
 }

@@ -8,5 +8,6 @@ import space.springbok.example.newsitem.domain.model.ArticleContent;
 interface ArticleContentEntityMapper {
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "guid", source = "guid.value")
     ArticleContentEntity toEntity(ArticleContent content);
 }

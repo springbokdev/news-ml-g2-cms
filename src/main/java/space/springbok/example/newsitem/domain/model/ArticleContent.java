@@ -1,21 +1,30 @@
 package space.springbok.example.newsitem.domain.model;
 
+import java.time.LocalDate;
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 /**
- * The journalist's article content: what a news item carries before the system
- * gives it an identity.
+ * The journalist's article content, and the aggregate root of a news item: it owns the
+ * GUID the system gives the item when it is created.
  */
-public record ArticleContent(String headline, String body, String language) {
+public record ArticleContent(NewsItemGuid guid, String headline, String body, String language) {
 
     private static final Pattern BCP_47_TAG = Pattern.compile(
             "^[A-Za-z]{2,3}(-[A-Za-z]{4})?(-([A-Za-z]{2}|[0-9]{3}))?(-([A-Za-z0-9]{5,8}|[0-9][A-Za-z0-9]{3}))*$");
 
     public ArticleContent {
+        Objects.requireNonNull(guid, "guid");
         requireText(headline, "headline");
         requireText(body, "body");
         requireText(language, "language");
         requireWellFormedLanguageTag(language);
+    }
+
+    public static ArticleContent create(String headline, String body, String language,
+                                        String provider, LocalDate creationDate, String uniqueId) {
+        return new ArticleContent(
+                NewsItemGuid.create(provider, creationDate, uniqueId), headline, body, language);
     }
 
     private static void requireWellFormedLanguageTag(String language) {

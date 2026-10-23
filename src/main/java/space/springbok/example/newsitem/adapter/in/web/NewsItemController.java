@@ -11,21 +11,25 @@ import org.springframework.web.bind.annotation.RestController;
 import space.springbok.example.newsitem.application.port.in.CreateNewsItemCommand;
 import space.springbok.example.newsitem.application.port.in.CreateNewsItemUseCase;
 import space.springbok.example.newsitem.domain.model.InvalidArticleFieldException;
+import space.springbok.example.newsitem.domain.model.NewsItemGuid;
 
 @RestController
 class NewsItemController {
 
     private final CreateNewsItemUseCase createNewsItemUseCase;
+    private final CreateNewsItemResponseMapper responseMapper;
 
-    NewsItemController(CreateNewsItemUseCase createNewsItemUseCase) {
+    NewsItemController(CreateNewsItemUseCase createNewsItemUseCase, CreateNewsItemResponseMapper responseMapper) {
         this.createNewsItemUseCase = createNewsItemUseCase;
+        this.responseMapper = responseMapper;
     }
 
     @PostMapping("/api/news-items")
     @ResponseStatus(HttpStatus.CREATED)
-    void createNewsItem(@Valid @RequestBody CreateNewsItemRequest request) {
-        createNewsItemUseCase.createNewsItem(
+    CreateNewsItemResponse createNewsItem(@Valid @RequestBody CreateNewsItemRequest request) {
+        NewsItemGuid guid = createNewsItemUseCase.createNewsItem(
                 new CreateNewsItemCommand(request.headline(), request.body(), request.language()));
+        return responseMapper.toResponse(guid);
     }
 
     @ExceptionHandler(InvalidArticleFieldException.class)

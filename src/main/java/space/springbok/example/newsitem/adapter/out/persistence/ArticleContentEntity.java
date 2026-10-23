@@ -22,6 +22,9 @@ class ArticleContentEntity {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
+    @Column(nullable = false, length = 255, unique = true)
+    private String guid;
+
     @Column(nullable = false, length = 1000)
     private String headline;
 

@@ -12,3 +12,7 @@ spring:
     hibernate:
       ddl-auto: validate
     open-in-view: false
+
+newsml:
+  # The NewsML-G2 provider; one per deployment. Override via NEWSML_PROVIDER.
+  provider: ${NEWSML_PROVIDER:springbok.space}
