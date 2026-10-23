@@ -32,7 +32,4 @@ build/
 ### VS Code ###
 .vscode/
 
-prompts
-
-### JVM crash logs ###
-hs_err_pid*.log
+prompts/
