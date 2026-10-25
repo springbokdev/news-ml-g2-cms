@@ -30,6 +30,7 @@ class NewsItemXmlRenderer {
         StringWriter out = new StringWriter();
         try {
             XMLStreamWriter xml = XMLOutputFactory.newInstance().createXMLStreamWriter(out);
+            xml.writeStartDocument("UTF-8", "1.0");
             xml.writeStartElement("newsItem");
             xml.writeDefaultNamespace(NEWSML_G2_NAMESPACE);
             xml.writeAttribute("guid", content.guid().value());

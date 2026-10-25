@@ -24,6 +24,16 @@ class NewsItemXmlRendererTest {
     private final NewsItemXmlRenderer renderer = new NewsItemXmlRenderer("springbok.space");
 
     @Test
+    @DisplayName("The one where an article is rendered, and the document starts with the UTF-8 XML declaration")
+    void documentStartsWithTheXmlDeclaration() {
+        ArticleContent article = ArticleContent.create(
+                "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
+                "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
+
+        assertThat(renderer.render(article)).startsWith("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+    }
+
+    @Test
     @DisplayName("The one where an article is rendered, and its standard is NewsML-G2")
     void standardIsNewsMlG2() throws Exception {
         ArticleContent article = ArticleContent.create(
