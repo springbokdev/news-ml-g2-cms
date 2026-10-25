@@ -193,6 +193,69 @@ class NewsItemControllerTest {
     }
 
     @Test
+    @DisplayName("The one where something unexpected fails, and the response is a 500 problem that leaks no internals")
+    void unexpectedFailureIsInternalServerErrorWithoutInternals() {
+        NewsItemGuid guid = new NewsItemGuid("urn:newsml:springbok.space:20261016:3f2b9c1e");
+        given(getNewsItemUseCase.getNewsItem(guid))
+                .willThrow(new IllegalStateException("jdbc:postgresql://db.internal:5432 connection refused"));
+
+        assertThat(mvc.get().uri("/api/news-items/{guid}", guid.value()))
+                .hasStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+                .hasContentType(MediaType.APPLICATION_PROBLEM_JSON)
+                .bodyJson()
+                .satisfies(json -> {
+                    assertThat(json).extractingPath("$.title").isEqualTo("Internal Server Error");
+                    assertThat(json).extractingPath("$.status").isEqualTo(500);
+                    assertThat(json).extractingPath("$.detail").isEqualTo("internal server error");
+                });
+    }
+
+    @Test
+    @DisplayName("The one where creating an article fails unexpectedly, and the response is a 500 problem for the create endpoint")
+    void unexpectedFailureWhileCreatingIsInternalServerError() {
+        willThrow(new IllegalStateException("jdbc:postgresql://db.internal:5432 connection refused"))
+                .given(createNewsItemUseCase).createNewsItem(any(CreateNewsItemCommand.class));
+
+        assertThat(mvc.post().uri("/api/news-items")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                          "headline": "Floods hit Cape Town",
+                          "body": "Rain fell.\\n\\nRoads closed.\\n\\nSchools shut.",
+                          "language": "en"
+                        }
+                        """))
+                .hasStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+                .hasContentType(MediaType.APPLICATION_PROBLEM_JSON)
+                .bodyJson()
+                .satisfies(json -> {
+                    assertThat(json).extractingPath("$.detail").isEqualTo("internal server error");
+                    assertThat(json).extractingPath("$.instance").isEqualTo("/api/news-items");
+                });
+    }
+
+    @Test
+    @DisplayName("The one where the request body is not readable JSON, and the response is a 400 rather than a 500")
+    void malformedJsonIsBadRequest() {
+        assertThat(mvc.post().uri("/api/news-items")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{ \"headline\": \"Floods hit Cape Town\", "))
+                .hasStatus(HttpStatus.BAD_REQUEST);
+
+        then(createNewsItemUseCase).shouldHaveNoInteractions();
+    }
+
+    @Test
+    @DisplayName("The one where a client accepts only JSON when fetching a news item, and the response is a 406 rather than a 500")
+    void clientAcceptingOnlyJsonIsNotAcceptable() {
+        assertThat(mvc.get().uri("/api/news-items/{guid}", "urn:newsml:springbok.space:20261016:3f2b9c1e")
+                .accept(MediaType.APPLICATION_JSON))
+                .hasStatus(HttpStatus.NOT_ACCEPTABLE);
+
+        then(getNewsItemUseCase).shouldHaveNoInteractions();
+    }
+
+    @Test
     @DisplayName("The one where the language is not a valid language tag, and the response is a 400 naming the language")
     void invalidLanguageTagIsBadRequestNamingTheField() {
         willThrow(new InvalidLanguageTagException("language"))

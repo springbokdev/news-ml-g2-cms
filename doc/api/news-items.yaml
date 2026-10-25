@@ -8,7 +8,8 @@ info:
     Business rules: doc/specs/create-news-item.md.
 
     Conventions (CLAUDE.md):
-    - 201 on create, 200 on query, 400 on validation failure, 404 when not found.
+    - 201 on create, 200 on query, 400 on validation failure, 404 when not found,
+      500 on an unexpected server error.
     - Errors are RFC 9457 problem details (`application/problem+json`). A business-rule
       violation names the offending input in the `field` property.
     - Number safety: the API carries no fractional numbers. `version` is a whole
@@ -121,6 +122,8 @@ paths:
                     detail: language is not a valid language tag
                     instance: /api/news-items
                     field: language
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
   /api/news-items/{guid}:
     get:
@@ -190,8 +193,27 @@ paths:
             The client does not accept `application/xml`. This endpoint produces
             only `application/xml`; the 404 problem above is returned as
             `application/problem+json` regardless of the `Accept` header.
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
 components:
+  responses:
+    InternalServerError:
+      description: |
+        An unexpected server-side failure. The response is deliberately generic:
+        it never carries a stack trace, SQL, or any other internal detail. The
+        cause is logged on the server only.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+          example:
+            type: about:blank
+            title: Internal Server Error
+            status: 500
+            detail: internal server error
+            instance: /api/news-items
+
   parameters:
     Guid:
       name: guid
