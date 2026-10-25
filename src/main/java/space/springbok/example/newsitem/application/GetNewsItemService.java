@@ -1,5 +1,6 @@
 package space.springbok.example.newsitem.application;
 
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import space.springbok.example.newsitem.application.port.in.GetNewsItemUseCase;
 import space.springbok.example.newsitem.application.port.out.LoadArticleContentPort;
@@ -8,13 +9,10 @@ import space.springbok.example.newsitem.domain.model.NewsItemGuid;
 import space.springbok.example.newsitem.domain.model.NewsItemNotFoundException;
 
 @Service
+@RequiredArgsConstructor
 class GetNewsItemService implements GetNewsItemUseCase {
 
     private final LoadArticleContentPort loadArticleContentPort;
-
-    GetNewsItemService(LoadArticleContentPort loadArticleContentPort) {
-        this.loadArticleContentPort = loadArticleContentPort;
-    }
 
     @Override
     public ArticleContent getNewsItem(String guid) {

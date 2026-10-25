@@ -1,6 +1,7 @@
 package space.springbok.example.newsitem.adapter.in.web;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -15,20 +16,13 @@ import space.springbok.example.newsitem.application.port.in.GetNewsItemUseCase;
 import space.springbok.example.newsitem.domain.model.ArticleContent;
 
 @RestController
+@RequiredArgsConstructor
 class NewsItemController {
 
     private final CreateNewsItemUseCase createNewsItemUseCase;
     private final GetNewsItemUseCase getNewsItemUseCase;
     private final CreateNewsItemResponseMapper responseMapper;
     private final NewsItemXmlRenderer xmlRenderer;
-
-    NewsItemController(CreateNewsItemUseCase createNewsItemUseCase, GetNewsItemUseCase getNewsItemUseCase,
-                       CreateNewsItemResponseMapper responseMapper, NewsItemXmlRenderer xmlRenderer) {
-        this.createNewsItemUseCase = createNewsItemUseCase;
-        this.getNewsItemUseCase = getNewsItemUseCase;
-        this.responseMapper = responseMapper;
-        this.xmlRenderer = xmlRenderer;
-    }
 
     @PostMapping("/api/news-items")
     ResponseEntity<CreateNewsItemResponse> createNewsItem(@Valid @RequestBody CreateNewsItemRequest request) {
