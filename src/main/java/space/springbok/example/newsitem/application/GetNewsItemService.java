@@ -17,8 +17,10 @@ class GetNewsItemService implements GetNewsItemUseCase {
     }
 
     @Override
-    public ArticleContent getNewsItem(NewsItemGuid guid) {
-        return loadArticleContentPort.findByGuid(guid).orElseThrow(() -> new NewsItemNotFoundException(guid));
+    public ArticleContent getNewsItem(String guid) {
+        NewsItemGuid newsItemGuid = new NewsItemGuid(guid);
+        return loadArticleContentPort.findByGuid(newsItemGuid)
+                .orElseThrow(() -> new NewsItemNotFoundException(newsItemGuid));
     }
 
 }

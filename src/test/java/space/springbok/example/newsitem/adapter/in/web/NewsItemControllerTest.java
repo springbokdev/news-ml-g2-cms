@@ -23,6 +23,7 @@ import space.springbok.example.newsitem.application.port.in.CreateNewsItemUseCas
 import space.springbok.example.newsitem.application.port.in.GetNewsItemUseCase;
 import space.springbok.example.newsitem.domain.model.ArticleContent;
 import space.springbok.example.newsitem.domain.model.InvalidLanguageTagException;
+import space.springbok.example.newsitem.domain.model.MalformedNewsItemGuidException;
 import space.springbok.example.newsitem.domain.model.MissingRequiredFieldException;
 import space.springbok.example.newsitem.domain.model.NewsItemGuid;
 import space.springbok.example.newsitem.domain.model.NewsItemNotFoundException;
@@ -142,7 +143,7 @@ class NewsItemControllerTest {
         ArticleContent stored = ArticleContent.create(
                 "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
                 "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
-        given(getNewsItemUseCase.getNewsItem(stored.guid())).willReturn(stored);
+        given(getNewsItemUseCase.getNewsItem(stored.guid().value())).willReturn(stored);
 
         assertThat(mvc.get().uri("/api/news-items/{guid}", stored.guid().value())
                 .accept(MediaType.APPLICATION_XML))
@@ -158,7 +159,7 @@ class NewsItemControllerTest {
         ArticleContent stored = ArticleContent.create(
                 "Izikhukhula eKapa, café, 水", "Imvula ina kakhulu.", "zu-ZA",
                 "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
-        given(getNewsItemUseCase.getNewsItem(stored.guid())).willReturn(stored);
+        given(getNewsItemUseCase.getNewsItem(stored.guid().value())).willReturn(stored);
 
         MvcTestResult result = mvc.get().uri("/api/news-items/{guid}", stored.guid().value())
                 .accept(MediaType.APPLICATION_XML)
@@ -174,7 +175,7 @@ class NewsItemControllerTest {
     @DisplayName("The one where a GUID that was never issued is requested, and the response is a 404 problem")
     void unknownGuidIsNotFound() {
         NewsItemGuid unissued = new NewsItemGuid("urn:newsml:springbok.space:20261016:never-issued");
-        given(getNewsItemUseCase.getNewsItem(unissued)).willThrow(new NewsItemNotFoundException(unissued));
+        given(getNewsItemUseCase.getNewsItem(unissued.value())).willThrow(new NewsItemNotFoundException(unissued));
 
         assertThat(mvc.get().uri("/api/news-items/{guid}", unissued.value()))
                 .hasStatus(HttpStatus.NOT_FOUND)
@@ -193,7 +194,7 @@ class NewsItemControllerTest {
     @DisplayName("The one where a partner asks for XML with a GUID that was never issued, and the response is still a 404 problem")
     void unknownGuidRequestedAsXmlIsNotFoundProblem() {
         NewsItemGuid unissued = new NewsItemGuid("urn:newsml:springbok.space:20261016:never-issued");
-        given(getNewsItemUseCase.getNewsItem(unissued)).willThrow(new NewsItemNotFoundException(unissued));
+        given(getNewsItemUseCase.getNewsItem(unissued.value())).willThrow(new NewsItemNotFoundException(unissued));
 
         assertThat(mvc.get().uri("/api/news-items/{guid}", unissued.value())
                 .accept(MediaType.APPLICATION_XML))
@@ -206,6 +207,8 @@ class NewsItemControllerTest {
     @Test
     @DisplayName("The one where the requested GUID is malformed, and the response is a 404 problem because no such item was ever issued")
     void malformedGuidIsNotFound() {
+        given(getNewsItemUseCase.getNewsItem("abc")).willThrow(new MalformedNewsItemGuidException());
+
         assertThat(mvc.get().uri("/api/news-items/{guid}", "abc"))
                 .hasStatus(HttpStatus.NOT_FOUND)
                 .hasContentType(MediaType.APPLICATION_PROBLEM_JSON)
@@ -214,15 +217,13 @@ class NewsItemControllerTest {
                     assertThat(json).extractingPath("$.detail").isEqualTo("news item not found");
                     assertThat(json).extractingPath("$.instance").isEqualTo("/api/news-items/abc");
                 });
-
-        then(getNewsItemUseCase).shouldHaveNoInteractions();
     }
 
     @Test
     @DisplayName("The one where something unexpected fails, and the response is a 500 problem that leaks no internals")
     void unexpectedFailureIsInternalServerErrorWithoutInternals() {
         NewsItemGuid guid = new NewsItemGuid("urn:newsml:springbok.space:20261016:3f2b9c1e");
-        given(getNewsItemUseCase.getNewsItem(guid))
+        given(getNewsItemUseCase.getNewsItem(guid.value()))
                 .willThrow(new IllegalStateException("jdbc:postgresql://db.internal:5432 connection refused"));
 
         assertThat(mvc.get().uri("/api/news-items/{guid}", guid.value()))

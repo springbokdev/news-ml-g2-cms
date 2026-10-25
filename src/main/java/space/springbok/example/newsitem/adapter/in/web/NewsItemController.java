@@ -13,7 +13,6 @@ import space.springbok.example.newsitem.application.port.in.CreateNewsItemComman
 import space.springbok.example.newsitem.application.port.in.CreateNewsItemUseCase;
 import space.springbok.example.newsitem.application.port.in.GetNewsItemUseCase;
 import space.springbok.example.newsitem.domain.model.ArticleContent;
-import space.springbok.example.newsitem.domain.model.NewsItemGuid;
 
 @RestController
 class NewsItemController {
@@ -40,6 +39,6 @@ class NewsItemController {
 
     @GetMapping(value = "/api/news-items/{guid}", produces = MediaType.APPLICATION_XML_VALUE)
     ResponseEntity<String> getNewsItem(@PathVariable String guid) {
-        return ResponseEntity.ok(xmlRenderer.render(getNewsItemUseCase.getNewsItem(new NewsItemGuid(guid))));
+        return ResponseEntity.ok(xmlRenderer.render(getNewsItemUseCase.getNewsItem(guid)));
     }
 }
