@@ -6,6 +6,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.willThrow;
 
+import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
+import org.springframework.test.web.servlet.assertj.MvcTestResult;
 import space.springbok.example.newsitem.application.port.in.CreateNewsItemCommand;
 import space.springbok.example.newsitem.application.port.in.CreateNewsItemUseCase;
 import space.springbok.example.newsitem.application.port.in.GetNewsItemUseCase;
@@ -142,6 +144,24 @@ class NewsItemControllerTest {
                 .hasContentTypeCompatibleWith(MediaType.APPLICATION_XML)
                 .bodyText()
                 .contains("<headline>Floods hit Cape Town</headline>");
+    }
+
+    @Test
+    @DisplayName("The one where the headline has non-ASCII characters, and the XML bytes are UTF-8 as the declaration says")
+    void nonAsciiHeadlineIsServedAsUtf8Bytes() throws Exception {
+        ArticleContent stored = ArticleContent.create(
+                "Izikhukhula eKapa, café, 水", "Imvula ina kakhulu.", "zu-ZA",
+                "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
+        given(getNewsItemUseCase.getNewsItem(stored.guid())).willReturn(stored);
+
+        MvcTestResult result = mvc.get().uri("/api/news-items/{guid}", stored.guid().value())
+                .accept(MediaType.APPLICATION_XML)
+                .exchange();
+
+        assertThat(result).hasStatusOk();
+        assertThat(new String(result.getResponse().getContentAsByteArray(), StandardCharsets.UTF_8))
+                .startsWith("<?xml version=\"1.0\" encoding=\"UTF-8\"?>")
+                .contains("<headline>Izikhukhula eKapa, café, 水</headline>");
     }
 
     @Test
