@@ -187,4 +187,25 @@ class NewsItemControllerTest {
                             .isEqualTo("/api/news-items/urn:newsml:springbok.space:20261016:never-issued");
                 });
     }
+
+    @Test
+    @DisplayName("The one where a client accepts only JSON when fetching a news item, and the response is a 406")
+    void clientAcceptingOnlyJsonIsNotAcceptable() {
+        assertThat(mvc.get().uri("/api/news-items/{guid}", "urn:newsml:springbok.space:20261016:3f2b9c1e")
+                .accept(MediaType.APPLICATION_JSON))
+                .hasStatus(HttpStatus.NOT_ACCEPTABLE);
+
+        then(getNewsItemUseCase).shouldHaveNoInteractions();
+    }
+
+    @Test
+    @DisplayName("The one where the create request body is not readable JSON, and the response is a 400")
+    void malformedJsonIsBadRequest() {
+        assertThat(mvc.post().uri("/api/news-items")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{ \"headline\": \"Floods hit Cape Town\", "))
+                .hasStatus(HttpStatus.BAD_REQUEST);
+
+        then(createNewsItemUseCase).shouldHaveNoInteractions();
+    }
 }
