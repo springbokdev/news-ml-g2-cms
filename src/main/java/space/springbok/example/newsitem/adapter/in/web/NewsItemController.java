@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import space.springbok.example.newsitem.application.port.in.CreateNewsItemCommand;
 import space.springbok.example.newsitem.application.port.in.CreateNewsItemUseCase;
 import space.springbok.example.newsitem.application.port.in.GetNewsItemUseCase;
+import space.springbok.example.newsitem.domain.model.ArticleContent;
 import space.springbok.example.newsitem.domain.model.NewsItemGuid;
 
 @RestController
@@ -32,9 +33,9 @@ class NewsItemController {
 
     @PostMapping("/api/news-items")
     ResponseEntity<CreateNewsItemResponse> createNewsItem(@Valid @RequestBody CreateNewsItemRequest request) {
-        NewsItemGuid guid = createNewsItemUseCase.createNewsItem(
+        ArticleContent created = createNewsItemUseCase.createNewsItem(
                 new CreateNewsItemCommand(request.headline(), request.body(), request.language()));
-        return ResponseEntity.status(HttpStatus.CREATED).body(responseMapper.toResponse(guid));
+        return ResponseEntity.status(HttpStatus.CREATED).body(responseMapper.toResponse(created));
     }
 
     @GetMapping(value = "/api/news-items/{guid}", produces = MediaType.APPLICATION_XML_VALUE)

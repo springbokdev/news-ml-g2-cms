@@ -45,7 +45,9 @@ class NewsItemControllerTest {
     @DisplayName("The one where a journalist submits a headline, body and language, and the article is created")
     void returnsCreatedWhenHeadlineBodyAndLanguageArePresent() {
         given(createNewsItemUseCase.createNewsItem(any(CreateNewsItemCommand.class)))
-                .willReturn(new NewsItemGuid("urn:newsml:springbok.space:20261016:3f2b9c1e"));
+                .willReturn(ArticleContent.create(
+                        "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
+                        "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e"));
 
         assertThat(mvc.post().uri("/api/news-items")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -66,7 +68,9 @@ class NewsItemControllerTest {
     @DisplayName("The one where an article is created, and the response body carries the assigned GUID and version 1")
     void createdResponseCarriesGuidAndVersion() {
         given(createNewsItemUseCase.createNewsItem(any(CreateNewsItemCommand.class)))
-                .willReturn(new NewsItemGuid("urn:newsml:springbok.space:20261016:3f2b9c1e"));
+                .willReturn(ArticleContent.create(
+                        "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
+                        "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e"));
 
         assertThat(mvc.post().uri("/api/news-items")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -90,7 +94,9 @@ class NewsItemControllerTest {
     @DisplayName("The one where the journalist supplies their own GUID, and it is ignored in favour of the assigned one")
     void journalistSuppliedGuidIsIgnored() {
         given(createNewsItemUseCase.createNewsItem(any(CreateNewsItemCommand.class)))
-                .willReturn(new NewsItemGuid("urn:newsml:springbok.space:20261016:3f2b9c1e"));
+                .willReturn(ArticleContent.create(
+                        "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
+                        "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e"));
 
         assertThat(mvc.post().uri("/api/news-items")
                 .contentType(MediaType.APPLICATION_JSON)

@@ -9,7 +9,6 @@ import space.springbok.example.newsitem.application.port.in.CreateNewsItemComman
 import space.springbok.example.newsitem.application.port.in.CreateNewsItemUseCase;
 import space.springbok.example.newsitem.application.port.out.SaveArticleContentPort;
 import space.springbok.example.newsitem.domain.model.ArticleContent;
-import space.springbok.example.newsitem.domain.model.NewsItemGuid;
 
 @Service
 class NewsItemService implements CreateNewsItemUseCase {
@@ -26,12 +25,12 @@ class NewsItemService implements CreateNewsItemUseCase {
     }
 
     @Override
-    public NewsItemGuid createNewsItem(CreateNewsItemCommand command) {
+    public ArticleContent createNewsItem(CreateNewsItemCommand command) {
         ArticleContent articleContent = ArticleContent.create(
                 command.headline(), command.body(), command.language(),
                 provider, OffsetDateTime.now(clock), UUID.randomUUID().toString());
         saveArticleContentPort.save(articleContent);
-        return articleContent.guid();
+        return articleContent;
     }
 
 }
