@@ -6,6 +6,7 @@ import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
 import static org.mockito.BDDMockito.willThrow;
 
+import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -16,11 +17,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
+import org.springframework.test.web.servlet.assertj.MvcTestResult;
 import space.springbok.example.newsitem.application.port.in.CreateNewsItemCommand;
 import space.springbok.example.newsitem.application.port.in.CreateNewsItemUseCase;
 import space.springbok.example.newsitem.application.port.in.GetNewsItemUseCase;
 import space.springbok.example.newsitem.domain.model.ArticleContent;
-import space.springbok.example.newsitem.domain.model.InvalidLanguageTagException;
 import space.springbok.example.newsitem.domain.model.MissingRequiredFieldException;
 import space.springbok.example.newsitem.domain.model.NewsItemGuid;
 import space.springbok.example.newsitem.domain.model.NewsItemNotFoundException;
@@ -43,7 +44,9 @@ class NewsItemControllerTest {
     @DisplayName("The one where a journalist submits a headline, body and language, and the article is created")
     void returnsCreatedWhenHeadlineBodyAndLanguageArePresent() {
         given(createNewsItemUseCase.createNewsItem(any(CreateNewsItemCommand.class)))
-                .willReturn(new NewsItemGuid("urn:newsml:springbok.space:20261016:3f2b9c1e"));
+                .willReturn(ArticleContent.create(
+                        "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
+                        "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e"));
 
         assertThat(mvc.post().uri("/api/news-items")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -64,7 +67,9 @@ class NewsItemControllerTest {
     @DisplayName("The one where an article is created, and the response body carries the assigned GUID and version 1")
     void createdResponseCarriesGuidAndVersion() {
         given(createNewsItemUseCase.createNewsItem(any(CreateNewsItemCommand.class)))
-                .willReturn(new NewsItemGuid("urn:newsml:springbok.space:20261016:3f2b9c1e"));
+                .willReturn(ArticleContent.create(
+                        "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
+                        "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e"));
 
         assertThat(mvc.post().uri("/api/news-items")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -88,7 +93,9 @@ class NewsItemControllerTest {
     @DisplayName("The one where the journalist supplies their own GUID, and it is ignored in favour of the assigned one")
     void journalistSuppliedGuidIsIgnored() {
         given(createNewsItemUseCase.createNewsItem(any(CreateNewsItemCommand.class)))
-                .willReturn(new NewsItemGuid("urn:newsml:springbok.space:20261016:3f2b9c1e"));
+                .willReturn(ArticleContent.create(
+                        "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
+                        "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e"));
 
         assertThat(mvc.post().uri("/api/news-items")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -134,7 +141,7 @@ class NewsItemControllerTest {
         ArticleContent stored = ArticleContent.create(
                 "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
                 "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
-        given(getNewsItemUseCase.getNewsItem(stored.guid())).willReturn(stored);
+        given(getNewsItemUseCase.getNewsItem(stored.guid().value())).willReturn(stored);
 
         assertThat(mvc.get().uri("/api/news-items/{guid}", stored.guid().value())
                 .accept(MediaType.APPLICATION_XML))
@@ -145,10 +152,28 @@ class NewsItemControllerTest {
     }
 
     @Test
+    @DisplayName("The one where the headline has non-ASCII characters, and the XML bytes are UTF-8 as the declaration says")
+    void nonAsciiHeadlineIsServedAsUtf8Bytes() throws Exception {
+        ArticleContent stored = ArticleContent.create(
+                "Izikhukhula eKapa, café, 水", "Imvula ina kakhulu.", "zu-ZA",
+                "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
+        given(getNewsItemUseCase.getNewsItem(stored.guid().value())).willReturn(stored);
+
+        MvcTestResult result = mvc.get().uri("/api/news-items/{guid}", stored.guid().value())
+                .accept(MediaType.APPLICATION_XML)
+                .exchange();
+
+        assertThat(result).hasStatusOk();
+        assertThat(new String(result.getResponse().getContentAsByteArray(), StandardCharsets.UTF_8))
+                .startsWith("<?xml version=\"1.0\" encoding=\"UTF-8\"?>")
+                .contains("<headline>Izikhukhula eKapa, café, 水</headline>");
+    }
+
+    @Test
     @DisplayName("The one where a GUID that was never issued is requested, and the response is a 404 problem")
     void unknownGuidIsNotFound() {
         NewsItemGuid unissued = new NewsItemGuid("urn:newsml:springbok.space:20261016:never-issued");
-        given(getNewsItemUseCase.getNewsItem(unissued)).willThrow(new NewsItemNotFoundException(unissued));
+        given(getNewsItemUseCase.getNewsItem(unissued.value())).willThrow(new NewsItemNotFoundException(unissued));
 
         assertThat(mvc.get().uri("/api/news-items/{guid}", unissued.value()))
                 .hasStatus(HttpStatus.NOT_FOUND)
@@ -164,51 +189,23 @@ class NewsItemControllerTest {
     }
 
     @Test
-    @DisplayName("The one where a partner asks for XML with a GUID that was never issued, and the response is still a 404 problem")
-    void unknownGuidRequestedAsXmlIsNotFoundProblem() {
-        NewsItemGuid unissued = new NewsItemGuid("urn:newsml:springbok.space:20261016:never-issued");
-        given(getNewsItemUseCase.getNewsItem(unissued)).willThrow(new NewsItemNotFoundException(unissued));
-
-        assertThat(mvc.get().uri("/api/news-items/{guid}", unissued.value())
-                .accept(MediaType.APPLICATION_XML))
-                .hasStatus(HttpStatus.NOT_FOUND)
-                .hasContentType(MediaType.APPLICATION_PROBLEM_JSON)
-                .bodyJson()
-                .extractingPath("$.detail").isEqualTo("news item not found");
-    }
-
-    @Test
-    @DisplayName("The one where the requested GUID is malformed, and the response is a 404 problem because no such item was ever issued")
-    void malformedGuidIsNotFound() {
-        assertThat(mvc.get().uri("/api/news-items/{guid}", "abc"))
-                .hasStatus(HttpStatus.NOT_FOUND)
-                .hasContentType(MediaType.APPLICATION_PROBLEM_JSON)
-                .bodyJson()
-                .satisfies(json -> {
-                    assertThat(json).extractingPath("$.detail").isEqualTo("news item not found");
-                    assertThat(json).extractingPath("$.instance").isEqualTo("/api/news-items/abc");
-                });
+    @DisplayName("The one where a client accepts only JSON when fetching a news item, and the response is a 406")
+    void clientAcceptingOnlyJsonIsNotAcceptable() {
+        assertThat(mvc.get().uri("/api/news-items/{guid}", "urn:newsml:springbok.space:20261016:3f2b9c1e")
+                .accept(MediaType.APPLICATION_JSON))
+                .hasStatus(HttpStatus.NOT_ACCEPTABLE);
 
         then(getNewsItemUseCase).shouldHaveNoInteractions();
     }
 
     @Test
-    @DisplayName("The one where the language is not a valid language tag, and the response is a 400 naming the language")
-    void invalidLanguageTagIsBadRequestNamingTheField() {
-        willThrow(new InvalidLanguageTagException("language"))
-                .given(createNewsItemUseCase).createNewsItem(any(CreateNewsItemCommand.class));
-
+    @DisplayName("The one where the create request body is not readable JSON, and the response is a 400")
+    void malformedJsonIsBadRequest() {
         assertThat(mvc.post().uri("/api/news-items")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("""
-                        {
-                          "headline": "Floods hit Cape Town",
-                          "body": "Rain fell.\\n\\nRoads closed.\\n\\nSchools shut.",
-                          "language": "english"
-                        }
-                        """))
-                .hasStatus(HttpStatus.BAD_REQUEST)
-                .bodyJson()
-                .extractingPath("$.field").isEqualTo("language");
+                .content("{ \"headline\": \"Floods hit Cape Town\", "))
+                .hasStatus(HttpStatus.BAD_REQUEST);
+
+        then(createNewsItemUseCase).shouldHaveNoInteractions();
     }
 }

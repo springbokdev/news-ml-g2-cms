@@ -3,6 +3,7 @@ package space.springbok.example.newsitem.application;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.BDDMockito.then;
 
 import java.time.OffsetDateTime;
 import java.util.Optional;
@@ -13,6 +14,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import space.springbok.example.newsitem.application.port.out.LoadArticleContentPort;
 import space.springbok.example.newsitem.domain.model.ArticleContent;
+import space.springbok.example.newsitem.domain.model.MalformedNewsItemGuidException;
 import space.springbok.example.newsitem.domain.model.NewsItemGuid;
 import space.springbok.example.newsitem.domain.model.NewsItemNotFoundException;
 
@@ -32,7 +34,7 @@ class GetNewsItemServiceTest {
         given(loadArticleContentPort.findByGuid(stored.guid())).willReturn(Optional.of(stored));
         GetNewsItemService service = new GetNewsItemService(loadArticleContentPort);
 
-        assertThat(service.getNewsItem(stored.guid())).isEqualTo(stored);
+        assertThat(service.getNewsItem(stored.guid().value())).isEqualTo(stored);
     }
 
     @Test
@@ -42,9 +44,19 @@ class GetNewsItemServiceTest {
         given(loadArticleContentPort.findByGuid(unissued)).willReturn(Optional.empty());
         GetNewsItemService service = new GetNewsItemService(loadArticleContentPort);
 
-        assertThatThrownBy(() -> service.getNewsItem(unissued))
+        assertThatThrownBy(() -> service.getNewsItem(unissued.value()))
                 .isInstanceOf(NewsItemNotFoundException.class)
                 .extracting("guid")
                 .isEqualTo(unissued);
+    }
+
+    @Test
+    @DisplayName("The one where the requested GUID is malformed, and it is rejected without looking anything up")
+    void malformedGuidIsRejectedWithoutLookup() {
+        GetNewsItemService service = new GetNewsItemService(loadArticleContentPort);
+
+        assertThatThrownBy(() -> service.getNewsItem("abc"))
+                .isInstanceOf(MalformedNewsItemGuidException.class);
+        then(loadArticleContentPort).shouldHaveNoInteractions();
     }
 }

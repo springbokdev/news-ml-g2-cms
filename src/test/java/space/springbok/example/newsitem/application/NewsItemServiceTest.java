@@ -54,7 +54,7 @@ class NewsItemServiceTest {
         NewsItemService service = new NewsItemService(saveArticleContentPort, clock, "springbok.space");
 
         NewsItemGuid guid = service.createNewsItem(new CreateNewsItemCommand(
-                "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en"));
+                "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en")).guid();
 
         then(saveArticleContentPort).should().save(articleContentCaptor.capture());
         assertThat(guid).isEqualTo(articleContentCaptor.getValue().guid());
@@ -66,7 +66,7 @@ class NewsItemServiceTest {
         NewsItemService service = new NewsItemService(saveArticleContentPort, clock, "springbok.space");
 
         NewsItemGuid guid = service.createNewsItem(new CreateNewsItemCommand(
-                "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en"));
+                "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en")).guid();
 
         assertThat(guid.value()).startsWith("urn:newsml:springbok.space:20261016:");
     }
@@ -78,8 +78,8 @@ class NewsItemServiceTest {
         CreateNewsItemCommand command = new CreateNewsItemCommand(
                 "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en");
 
-        NewsItemGuid first = service.createNewsItem(command);
-        NewsItemGuid second = service.createNewsItem(command);
+        NewsItemGuid first = service.createNewsItem(command).guid();
+        NewsItemGuid second = service.createNewsItem(command).guid();
 
         assertThat(second).isNotEqualTo(first);
     }
@@ -90,7 +90,7 @@ class NewsItemServiceTest {
         NewsItemService service = new NewsItemService(saveArticleContentPort, clock, "example.org");
 
         NewsItemGuid guid = service.createNewsItem(new CreateNewsItemCommand(
-                "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en"));
+                "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en")).guid();
 
         assertThat(guid.value()).startsWith("urn:newsml:example.org:20261016:");
     }

@@ -3,13 +3,13 @@ package space.springbok.example.newsitem.application;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.util.UUID;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import space.springbok.example.newsitem.application.port.in.CreateNewsItemCommand;
 import space.springbok.example.newsitem.application.port.in.CreateNewsItemUseCase;
 import space.springbok.example.newsitem.application.port.out.SaveArticleContentPort;
 import space.springbok.example.newsitem.domain.model.ArticleContent;
-import space.springbok.example.newsitem.domain.model.NewsItemGuid;
 
 @Service
 class NewsItemService implements CreateNewsItemUseCase {
@@ -26,12 +26,12 @@ class NewsItemService implements CreateNewsItemUseCase {
     }
 
     @Override
-    public NewsItemGuid createNewsItem(CreateNewsItemCommand command) {
+    public ArticleContent createNewsItem(CreateNewsItemCommand command) {
         ArticleContent articleContent = ArticleContent.create(
                 command.headline(), command.body(), command.language(),
                 provider, OffsetDateTime.now(clock), UUID.randomUUID().toString());
         saveArticleContentPort.save(articleContent);
-        return articleContent.guid();
+        return articleContent;
     }
 
 }
