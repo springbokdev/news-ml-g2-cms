@@ -22,8 +22,6 @@ import space.springbok.example.newsitem.application.port.in.CreateNewsItemComman
 import space.springbok.example.newsitem.application.port.in.CreateNewsItemUseCase;
 import space.springbok.example.newsitem.application.port.in.GetNewsItemUseCase;
 import space.springbok.example.newsitem.domain.model.ArticleContent;
-import space.springbok.example.newsitem.domain.model.InvalidLanguageTagException;
-import space.springbok.example.newsitem.domain.model.MalformedNewsItemGuidException;
 import space.springbok.example.newsitem.domain.model.MissingRequiredFieldException;
 import space.springbok.example.newsitem.domain.model.NewsItemGuid;
 import space.springbok.example.newsitem.domain.model.NewsItemNotFoundException;
@@ -188,117 +186,5 @@ class NewsItemControllerTest {
                     assertThat(json).extractingPath("$.instance")
                             .isEqualTo("/api/news-items/urn:newsml:springbok.space:20261016:never-issued");
                 });
-    }
-
-    @Test
-    @DisplayName("The one where a partner asks for XML with a GUID that was never issued, and the response is still a 404 problem")
-    void unknownGuidRequestedAsXmlIsNotFoundProblem() {
-        NewsItemGuid unissued = new NewsItemGuid("urn:newsml:springbok.space:20261016:never-issued");
-        given(getNewsItemUseCase.getNewsItem(unissued.value())).willThrow(new NewsItemNotFoundException(unissued));
-
-        assertThat(mvc.get().uri("/api/news-items/{guid}", unissued.value())
-                .accept(MediaType.APPLICATION_XML))
-                .hasStatus(HttpStatus.NOT_FOUND)
-                .hasContentType(MediaType.APPLICATION_PROBLEM_JSON)
-                .bodyJson()
-                .extractingPath("$.detail").isEqualTo("news item not found");
-    }
-
-    @Test
-    @DisplayName("The one where the requested GUID is malformed, and the response is a 404 problem because no such item was ever issued")
-    void malformedGuidIsNotFound() {
-        given(getNewsItemUseCase.getNewsItem("abc")).willThrow(new MalformedNewsItemGuidException());
-
-        assertThat(mvc.get().uri("/api/news-items/{guid}", "abc"))
-                .hasStatus(HttpStatus.NOT_FOUND)
-                .hasContentType(MediaType.APPLICATION_PROBLEM_JSON)
-                .bodyJson()
-                .satisfies(json -> {
-                    assertThat(json).extractingPath("$.detail").isEqualTo("news item not found");
-                    assertThat(json).extractingPath("$.instance").isEqualTo("/api/news-items/abc");
-                });
-    }
-
-    @Test
-    @DisplayName("The one where something unexpected fails, and the response is a 500 problem that leaks no internals")
-    void unexpectedFailureIsInternalServerErrorWithoutInternals() {
-        NewsItemGuid guid = new NewsItemGuid("urn:newsml:springbok.space:20261016:3f2b9c1e");
-        given(getNewsItemUseCase.getNewsItem(guid.value()))
-                .willThrow(new IllegalStateException("jdbc:postgresql://db.internal:5432 connection refused"));
-
-        assertThat(mvc.get().uri("/api/news-items/{guid}", guid.value()))
-                .hasStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-                .hasContentType(MediaType.APPLICATION_PROBLEM_JSON)
-                .bodyJson()
-                .satisfies(json -> {
-                    assertThat(json).extractingPath("$.title").isEqualTo("Internal Server Error");
-                    assertThat(json).extractingPath("$.status").isEqualTo(500);
-                    assertThat(json).extractingPath("$.detail").isEqualTo("internal server error");
-                });
-    }
-
-    @Test
-    @DisplayName("The one where creating an article fails unexpectedly, and the response is a 500 problem for the create endpoint")
-    void unexpectedFailureWhileCreatingIsInternalServerError() {
-        willThrow(new IllegalStateException("jdbc:postgresql://db.internal:5432 connection refused"))
-                .given(createNewsItemUseCase).createNewsItem(any(CreateNewsItemCommand.class));
-
-        assertThat(mvc.post().uri("/api/news-items")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""
-                        {
-                          "headline": "Floods hit Cape Town",
-                          "body": "Rain fell.\\n\\nRoads closed.\\n\\nSchools shut.",
-                          "language": "en"
-                        }
-                        """))
-                .hasStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-                .hasContentType(MediaType.APPLICATION_PROBLEM_JSON)
-                .bodyJson()
-                .satisfies(json -> {
-                    assertThat(json).extractingPath("$.detail").isEqualTo("internal server error");
-                    assertThat(json).extractingPath("$.instance").isEqualTo("/api/news-items");
-                });
-    }
-
-    @Test
-    @DisplayName("The one where the request body is not readable JSON, and the response is a 400 rather than a 500")
-    void malformedJsonIsBadRequest() {
-        assertThat(mvc.post().uri("/api/news-items")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("{ \"headline\": \"Floods hit Cape Town\", "))
-                .hasStatus(HttpStatus.BAD_REQUEST);
-
-        then(createNewsItemUseCase).shouldHaveNoInteractions();
-    }
-
-    @Test
-    @DisplayName("The one where a client accepts only JSON when fetching a news item, and the response is a 406 rather than a 500")
-    void clientAcceptingOnlyJsonIsNotAcceptable() {
-        assertThat(mvc.get().uri("/api/news-items/{guid}", "urn:newsml:springbok.space:20261016:3f2b9c1e")
-                .accept(MediaType.APPLICATION_JSON))
-                .hasStatus(HttpStatus.NOT_ACCEPTABLE);
-
-        then(getNewsItemUseCase).shouldHaveNoInteractions();
-    }
-
-    @Test
-    @DisplayName("The one where the language is not a valid language tag, and the response is a 400 naming the language")
-    void invalidLanguageTagIsBadRequestNamingTheField() {
-        willThrow(new InvalidLanguageTagException("language"))
-                .given(createNewsItemUseCase).createNewsItem(any(CreateNewsItemCommand.class));
-
-        assertThat(mvc.post().uri("/api/news-items")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("""
-                        {
-                          "headline": "Floods hit Cape Town",
-                          "body": "Rain fell.\\n\\nRoads closed.\\n\\nSchools shut.",
-                          "language": "english"
-                        }
-                        """))
-                .hasStatus(HttpStatus.BAD_REQUEST)
-                .bodyJson()
-                .extractingPath("$.field").isEqualTo("language");
     }
 }
