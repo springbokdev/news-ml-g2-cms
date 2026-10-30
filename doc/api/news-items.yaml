@@ -3,9 +3,9 @@ info:
   title: NewsML-G2 CMS — News Items API
   version: 0.1.0
   description: |
-    Create text news items and retrieve them as NewsML-G2 2.34 News Item XML.
+    Create and update text news items and retrieve them as NewsML-G2 2.34 News Item XML.
 
-    Business rules: doc/specs/create-news-item.md.
+    Business rules: doc/specs/create-news-item.md, doc/specs/update-news-item.md.
 
     Conventions (CLAUDE.md):
     - 201 on create, 200 on query, 400 on validation failure, 404 when not found,
@@ -17,8 +17,8 @@ info:
       string (`type: string, format: decimal`) and mapped to `BigDecimal`, never
       as a JSON floating-point number.
 
-    Out of scope: updates and version increments, draft/withheld workflow,
-    delivery to partners, packages and non-text media.
+    Out of scope: draft/withheld workflow, delivery to partners, packages and
+    non-text media.
 servers:
   - url: http://localhost:8080
     description: Local development
@@ -195,6 +195,52 @@ paths:
             `application/problem+json` regardless of the `Accept` header.
         '500':
           $ref: '#/components/responses/InternalServerError'
+    put:
+      tags: [News Items]
+      operationId: updateNewsItem
+      summary: Save an update as a new version of a news item
+      description: |
+        Replaces the headline, body and language completely and stores the result
+        as the next version. The GUID never changes and earlier versions are kept.
+      parameters:
+        - $ref: '#/components/parameters/Guid'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateNewsItemRequest'
+            example:
+              headline: Floods hit Cape Town, two dead
+              body: "Rain fell.\n\nRoads closed.\n\nSchools shut."
+              language: en
+              author: Thandi Nkosi
+              version: 1
+      responses:
+        '200':
+          description: The update was accepted and stored as a new version.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UpdateNewsItemResponse'
+              example:
+                guid: urn:newsml:springbok.space:20261016:3f2b9c1e
+                version: 2
+        '404':
+          description: |
+            No news item was ever issued with this GUID. Nothing is stored.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+              example:
+                type: about:blank
+                title: Not Found
+                status: 404
+                detail: news item not found
+                instance: /api/news-items/urn:newsml:springbok.space:20261016:never-issued
+        '500':
+          $ref: '#/components/responses/InternalServerError'
 
 components:
   responses:
@@ -272,6 +318,57 @@ components:
           minimum: 1
           description: Item version. Always 1 for a newly created item.
           example: 1
+
+    UpdateNewsItemRequest:
+      type: object
+      description: |
+        The complete new content of the news item, the name of its author, and the
+        version the editor edited. Unknown properties are ignored.
+      required: [headline, body, language, author, version]
+      properties:
+        headline:
+          type: string
+          description: The headline. Must contain at least one non-whitespace character.
+          pattern: '\S'
+          example: Floods hit Cape Town, two dead
+        body:
+          type: string
+          description: |
+            Plain-text body. Paragraphs are separated by a blank line; each becomes
+            one XHTML `<p>`. Must contain at least one non-whitespace character.
+          pattern: '\S'
+          example: "Rain fell.\n\nRoads closed.\n\nSchools shut."
+        language:
+          type: string
+          description: |
+            A well-formed BCP 47 language tag, e.g. `en` or `zu-ZA`; used as `xml:lang`.
+            Free text such as `english` is rejected.
+          pattern: '^[A-Za-z]{2,3}(-[A-Za-z]{4})?(-([A-Za-z]{2}|[0-9]{3}))?(-([A-Za-z0-9]{5,8}|[0-9][A-Za-z0-9]{3}))*$'
+          example: en
+        author:
+          type: string
+          description: The author's name. Must contain at least one non-whitespace character.
+          pattern: '\S'
+          example: Thandi Nkosi
+        version:
+          type: integer
+          format: int32
+          minimum: 1
+          description: The version the editor edited.
+          example: 1
+
+    UpdateNewsItemResponse:
+      type: object
+      required: [guid, version]
+      properties:
+        guid:
+          $ref: '#/components/schemas/Guid'
+        version:
+          type: integer
+          format: int32
+          minimum: 2
+          description: The version created by this update.
+          example: 2
 
     Problem:
       type: object

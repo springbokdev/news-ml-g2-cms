@@ -23,6 +23,6 @@ class ArticleContentPersistenceAdapter implements SaveArticleContentPort, LoadAr
 
     @Override
     public Optional<ArticleContent> findByGuid(NewsItemGuid guid) {
-        return repository.findByGuid(guid.value()).map(mapper::toDomain);
+        return repository.findFirstByGuidOrderByVersionDesc(guid.value()).map(mapper::toDomain);
     }
 }

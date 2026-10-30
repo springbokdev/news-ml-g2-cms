@@ -84,6 +84,23 @@ class ArticleContentPersistenceAdapterTest {
     }
 
     @Test
+    @DisplayName("The one where an item has versions 1 and 2 stored, and loading it by its GUID returns version 2 while version 1 stays stored")
+    void loadingByGuidReturnsTheLatestVersionAndKeepsTheEarlierOne() {
+        ArticleContent version1 = ArticleContent.create(
+                "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
+                "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
+        ArticleContent version2 = version1.update(
+                "Floods hit Cape Town, two dead", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
+                OffsetDateTime.parse("2026-10-17T08:15:00+02:00"));
+        adapter.save(version1);
+        adapter.save(version2);
+        repository.flush();
+
+        assertThat(adapter.findByGuid(version1.guid())).contains(version2);
+        assertThat(repository.findAll()).hasSize(2);
+    }
+
+    @Test
     @DisplayName("The one where article content has no versionCreated, and the database rejects it")
     void versionCreatedIsRequired() {
         ArticleContentEntity withoutVersionCreated = new ArticleContentEntity();

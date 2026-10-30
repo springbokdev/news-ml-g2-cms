@@ -21,13 +21,15 @@ import org.springframework.test.web.servlet.assertj.MvcTestResult;
 import space.springbok.example.newsitem.application.port.in.CreateNewsItemCommand;
 import space.springbok.example.newsitem.application.port.in.CreateNewsItemUseCase;
 import space.springbok.example.newsitem.application.port.in.GetNewsItemUseCase;
+import space.springbok.example.newsitem.application.port.in.UpdateNewsItemCommand;
+import space.springbok.example.newsitem.application.port.in.UpdateNewsItemUseCase;
 import space.springbok.example.newsitem.domain.model.ArticleContent;
 import space.springbok.example.newsitem.domain.model.MissingRequiredFieldException;
 import space.springbok.example.newsitem.domain.model.NewsItemGuid;
 import space.springbok.example.newsitem.domain.model.NewsItemNotFoundException;
 
 @WebMvcTest(NewsItemController.class)
-@Import({CreateNewsItemResponseMapperImpl.class, NewsItemXmlRenderer.class})
+@Import({CreateNewsItemResponseMapperImpl.class, UpdateNewsItemResponseMapperImpl.class, NewsItemXmlRenderer.class})
 @DisplayName("News item web endpoint")
 class NewsItemControllerTest {
 
@@ -39,6 +41,9 @@ class NewsItemControllerTest {
 
     @MockitoBean
     private GetNewsItemUseCase getNewsItemUseCase;
+
+    @MockitoBean
+    private UpdateNewsItemUseCase updateNewsItemUseCase;
 
     @Test
     @DisplayName("The one where a journalist submits a headline, body and language, and the article is created")
@@ -207,5 +212,39 @@ class NewsItemControllerTest {
                 .hasStatus(HttpStatus.BAD_REQUEST);
 
         then(createNewsItemUseCase).shouldHaveNoInteractions();
+    }
+
+    @Test
+    @DisplayName("The one where an editor sends a new headline for an existing item, and the update is accepted as version 2 with the same GUID")
+    void returnsOkWithGuidAndNextVersionWhenUpdateIsAccepted() {
+        ArticleContent version1 = ArticleContent.create(
+                "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
+                "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
+        given(updateNewsItemUseCase.updateNewsItem(any(UpdateNewsItemCommand.class)))
+                .willReturn(version1.update(
+                        "Floods hit Cape Town, two dead", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
+                        OffsetDateTime.parse("2026-10-17T08:15:00+02:00")));
+
+        assertThat(mvc.put().uri("/api/news-items/{guid}", version1.guid().value())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                          "headline": "Floods hit Cape Town, two dead",
+                          "body": "Rain fell.\\n\\nRoads closed.\\n\\nSchools shut.",
+                          "language": "en",
+                          "author": "Thandi Nkosi",
+                          "version": 1
+                        }
+                        """))
+                .hasStatus(HttpStatus.OK)
+                .bodyJson()
+                .satisfies(json -> {
+                    assertThat(json).extractingPath("$.guid").isEqualTo(version1.guid().value());
+                    assertThat(json).extractingPath("$.version").isEqualTo(2);
+                });
+
+        then(updateNewsItemUseCase).should().updateNewsItem(new UpdateNewsItemCommand(
+                version1.guid().value(),
+                "Floods hit Cape Town, two dead", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en"));
     }
 }
