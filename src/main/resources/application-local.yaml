@@ -1,0 +1,12 @@
+spring:
+  # Persistence is PostgreSQL. Defaults target the local development database;
+  # override via environment variables.
+  datasource:
+    url: ${DB_URL_NEWS_ML}
+    username: ${DB_USERNAME_NEWS_ML}
+    password: ${DB_PASSWORD_NEWS_ML}
+  jpa:
+    # Flyway owns the schema; Hibernate only checks the mappings against it.
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
