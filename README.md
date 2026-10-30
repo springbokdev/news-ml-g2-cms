@@ -65,18 +65,23 @@ The project includes a PostToolUse hook that automatically runs `mvn test` after
 
 ### Running locally with PostgreSQL
 
-`spring-boot:run` needs a PostgreSQL instance. The connection is configured in
-`src/main/resources/application.yaml` and defaults to database `newsml_db` on
-`localhost:5432` as user `postgres` with password `postgres`; override via `DB_URL` /
-`DB_USERNAME` / `DB_PASSWORD`. To start an instance with Docker:
+`compose.yaml` runs PostgreSQL for local development, and the `local` profile
+(`src/main/resources/application-local.yaml`) connects the app to it. Both read their
+settings from the environment:
 
 ```bash
-docker run --name news-ml-postgres-dev -e POSTGRES_DB=newsml_db \
-  -e POSTGRES_PASSWORD=postgres -p 127.0.0.1:5432:5432 -d postgres:18
-./mvnw spring-boot:run
+export DB_URL_NEWS_ML=jdbc:postgresql://localhost:5432/newsml_db
+export DB_USERNAME_NEWS_ML=<username>
+export DB_PASSWORD_NEWS_ML=<password>
+
+docker compose up -d --wait              # Start PostgreSQL
+./mvnw spring-boot:run -Dspring-boot.run.profiles=local
+docker compose down                      # Stop PostgreSQL, keep the data
 ```
 
-Flyway creates the schema at startup and the data persists between runs.
+Flyway creates the schema at startup and the data persists between runs in a Docker volume.
+The username and password only take effect when that volume is first created;
+`docker compose down -v` deletes the volume and all its data.
 
 Tests don't need this — they run against H2 in PostgreSQL compatibility mode.
 

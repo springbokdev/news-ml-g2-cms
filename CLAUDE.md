@@ -12,7 +12,8 @@ Maven wrapper (`./mvnw`, not `mvn`); Java 25 required (see `pom.xml`).
 - `./mvnw test` — unit tests (H2 in PostgreSQL mode, no Docker needed).
 - `./mvnw verify` — unit + acceptance (`*IT`) tests.
 - `./mvnw -Dtest=ClassName#method test` — single test class/method.
-- `./mvnw spring-boot:run` — needs a running PostgreSQL (see Database below).
+- `docker compose up -d --wait` — starts the local PostgreSQL from `compose.yaml`.
+- `./mvnw spring-boot:run -Dspring-boot.run.profiles=local` — needs a running PostgreSQL (see Database below).
 
 ## Stack
 - spring-boot-starter-web
@@ -25,8 +26,8 @@ Maven wrapper (`./mvnw`, not `mvn`); Java 25 required (see `pom.xml`).
 ### Database
 Production persistence is PostgreSQL. The schema is owned by Flyway migrations in
 `src/main/resources/db/migration` (`V<n>__description.sql`); Hibernate is `ddl-auto: validate`
-and never generates schema. Connection is in `src/main/resources/application.yaml`,
-overridable via `DB_URL` / `DB_USERNAME` / `DB_PASSWORD`. (Local-run setup is in the README.)
+and never generates schema. Connection is in `src/main/resources/application-local.yaml`,
+set via `DB_URL_NEWS_ML` / `DB_USERNAME_NEWS_ML` / `DB_PASSWORD_NEWS_ML`. (Local-run setup is in the README.)
 
 ## Coding Conventions
 
