@@ -223,7 +223,7 @@ class NewsItemControllerTest {
         given(updateNewsItemUseCase.updateNewsItem(any(UpdateNewsItemCommand.class)))
                 .willReturn(version1.update(
                         "Floods hit Cape Town, two dead", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
-                        OffsetDateTime.parse("2026-10-17T08:15:00+02:00")));
+                        "Thandi Nkosi", OffsetDateTime.parse("2026-10-17T08:15:00+02:00")));
 
         assertThat(mvc.put().uri("/api/news-items/{guid}", version1.guid().value())
                 .contentType(MediaType.APPLICATION_JSON)
@@ -245,6 +245,7 @@ class NewsItemControllerTest {
 
         then(updateNewsItemUseCase).should().updateNewsItem(new UpdateNewsItemCommand(
                 version1.guid().value(),
-                "Floods hit Cape Town, two dead", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en"));
+                "Floods hit Cape Town, two dead", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
+                "Thandi Nkosi"));
     }
 }

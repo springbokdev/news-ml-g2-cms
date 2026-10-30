@@ -91,7 +91,7 @@ class ArticleContentPersistenceAdapterTest {
                 "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
         ArticleContent version2 = version1.update(
                 "Floods hit Cape Town, two dead", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
-                OffsetDateTime.parse("2026-10-17T08:15:00+02:00"));
+                "Thandi Nkosi", OffsetDateTime.parse("2026-10-17T08:15:00+02:00"));
         adapter.save(version1);
         adapter.save(version2);
         repository.flush();
@@ -115,13 +115,14 @@ class ArticleContentPersistenceAdapterTest {
     }
 
     @Test
-    @DisplayName("The one where two articles share a GUID, and the second one is rejected by the database")
-    void duplicateGuidIsRejected() {
+    @DisplayName("The one where two articles share a GUID and a version, and the second one is rejected by the database")
+    void duplicateGuidAndVersionIsRejected() {
         ArticleContentEntity first = new ArticleContentEntity();
         first.setGuid("urn:newsml:springbok.space:20261016:3f2b9c1e");
         first.setHeadline("Floods hit Cape Town");
         first.setBody("Rain fell.");
         first.setLanguage("en");
+        first.setVersion(1);
         first.setVersionCreated(OffsetDateTime.parse("2026-10-16T09:30:00+02:00"));
         repository.saveAndFlush(first);
 
@@ -130,6 +131,7 @@ class ArticleContentPersistenceAdapterTest {
         second.setHeadline("Floods hit Cape Town");
         second.setBody("Rain fell.");
         second.setLanguage("en");
+        second.setVersion(1);
         second.setVersionCreated(OffsetDateTime.parse("2026-10-16T09:30:00+02:00"));
 
         assertThatThrownBy(() -> repository.saveAndFlush(second))

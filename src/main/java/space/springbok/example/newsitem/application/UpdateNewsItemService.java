@@ -27,7 +27,7 @@ class UpdateNewsItemService implements UpdateNewsItemUseCase {
         ArticleContent latest = loadArticleContentPort.findByGuid(guid)
                 .orElseThrow(() -> new NewsItemNotFoundException(guid));
         ArticleContent updated = latest.update(
-                command.headline(), command.body(), command.language(), OffsetDateTime.now(clock));
+                command.headline(), command.body(), command.language(), command.author(), OffsetDateTime.now(clock));
         saveArticleContentPort.save(updated);
         return updated;
     }

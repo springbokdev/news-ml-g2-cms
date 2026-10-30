@@ -98,7 +98,7 @@ class ArticleContentTest {
 
             ArticleContent version2 = version1.update(
                     "Floods hit Cape Town, two dead", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
-                    OffsetDateTime.parse("2026-10-17T08:15:00+02:00"));
+                    "Thandi Nkosi", OffsetDateTime.parse("2026-10-17T08:15:00+02:00"));
 
             assertThat(version2.version()).isEqualTo(2);
             assertThat(version2.guid()).isEqualTo(version1.guid());
@@ -106,6 +106,26 @@ class ArticleContentTest {
             assertThat(version2.body()).isEqualTo("Rain fell.\n\nRoads closed.\n\nSchools shut.");
             assertThat(version2.language()).isEqualTo("en");
             assertThat(version2.versionCreated()).isEqualTo(OffsetDateTime.parse("2026-10-17T08:15:00+02:00"));
+        }
+    }
+
+    @Nested
+    @DisplayName("Must require a headline, a body, a language and an author on every update")
+    class MustRequireHeadlineBodyLanguageAndAuthorOnEveryUpdate {
+
+        @Test
+        @DisplayName("The one where the author is blank, and the update is rejected: author required")
+        void blankAuthorIsRejected() {
+            ArticleContent version1 = ArticleContent.create(
+                    "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
+                    "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
+
+            assertThatThrownBy(() -> version1.update(
+                    "Floods hit Cape Town, two dead", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
+                    "   ", OffsetDateTime.parse("2026-10-17T08:15:00+02:00")))
+                    .isInstanceOf(MissingRequiredFieldException.class)
+                    .extracting("field")
+                    .isEqualTo("author");
         }
     }
 
