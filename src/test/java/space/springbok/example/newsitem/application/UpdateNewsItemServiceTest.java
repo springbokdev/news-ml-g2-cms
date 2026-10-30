@@ -21,6 +21,7 @@ import space.springbok.example.newsitem.application.port.in.UpdateNewsItemComman
 import space.springbok.example.newsitem.application.port.out.LoadArticleContentPort;
 import space.springbok.example.newsitem.application.port.out.SaveArticleContentPort;
 import space.springbok.example.newsitem.domain.model.ArticleContent;
+import space.springbok.example.newsitem.domain.model.MissingRequiredFieldException;
 import space.springbok.example.newsitem.domain.model.NewsItemGuid;
 import space.springbok.example.newsitem.domain.model.NewsItemNotFoundException;
 
@@ -50,7 +51,8 @@ class UpdateNewsItemServiceTest {
 
         ArticleContent returned = service.updateNewsItem(new UpdateNewsItemCommand(
                 version1.guid().value(),
-                "Floods hit Cape Town, two dead", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en"));
+                "Floods hit Cape Town, two dead", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
+                "Thandi Nkosi"));
 
         then(saveArticleContentPort).should().save(articleContentCaptor.capture());
         ArticleContent saved = articleContentCaptor.getValue();
@@ -70,10 +72,30 @@ class UpdateNewsItemServiceTest {
 
         assertThatThrownBy(() -> service.updateNewsItem(new UpdateNewsItemCommand(
                 unissued.value(),
-                "Floods hit Cape Town, two dead", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en")))
+                "Floods hit Cape Town, two dead", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
+                "Thandi Nkosi")))
                 .isInstanceOf(NewsItemNotFoundException.class)
                 .extracting("guid")
                 .isEqualTo(unissued);
+        then(saveArticleContentPort).shouldHaveNoInteractions();
+    }
+
+    @Test
+    @DisplayName("The one where the author is blank, and the update is rejected: author required and nothing is saved")
+    void blankAuthorIsRejectedAndNothingIsSaved() {
+        ArticleContent version1 = ArticleContent.create(
+                "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
+                "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
+        given(loadArticleContentPort.findByGuid(version1.guid())).willReturn(Optional.of(version1));
+        UpdateNewsItemService service = new UpdateNewsItemService(loadArticleContentPort, saveArticleContentPort, clock);
+
+        assertThatThrownBy(() -> service.updateNewsItem(new UpdateNewsItemCommand(
+                version1.guid().value(),
+                "Floods hit Cape Town, two dead", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
+                "   ")))
+                .isInstanceOf(MissingRequiredFieldException.class)
+                .extracting("field")
+                .isEqualTo("author");
         then(saveArticleContentPort).shouldHaveNoInteractions();
     }
 }

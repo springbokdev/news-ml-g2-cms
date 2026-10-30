@@ -31,7 +31,9 @@ public record ArticleContent(NewsItemGuid guid, String headline, String body, St
                 headline, body, language, INITIAL_VERSION, createdAt);
     }
 
-    public ArticleContent update(String headline, String body, String language, OffsetDateTime updatedAt) {
+    public ArticleContent update(String headline, String body, String language, String author,
+                                 OffsetDateTime updatedAt) {
+        requireText(author, "author");
         return new ArticleContent(guid, headline, body, language, version + 1, updatedAt);
     }
 

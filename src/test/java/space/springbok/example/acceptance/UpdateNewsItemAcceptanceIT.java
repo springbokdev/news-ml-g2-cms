@@ -11,6 +11,11 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Map;
+import java.util.stream.Stream;
+
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -106,6 +111,85 @@ class UpdateNewsItemAcceptanceIT {
 
             mockMvc.perform(get("/api/news-items/{guid}", neverIssued).accept(MediaType.APPLICATION_XML))
                     .andExpect(status().isNotFound());
+        }
+    }
+
+    @Nested
+    @DisplayName("Must require a headline, a body, a language and an author on every update")
+    class MustRequireHeadlineBodyLanguageAndAuthorOnEveryUpdate {
+
+        private static final Map<String, String> NAMESPACES = Map.of(
+                "n", "http://iptc.org/std/nar/2006-10-01/");
+
+        static Stream<Arguments> rejectedUpdates() {
+            return Stream.of(
+                    Arguments.of("headline is blank", "   ", "en", "Thandi Nkosi",
+                            "headline", "headline required"),
+                    Arguments.of("language is english", "Floods hit Cape Town, two dead", "english", "Thandi Nkosi",
+                            "language", "language is not a valid language tag"),
+                    Arguments.of("author is blank", "Floods hit Cape Town, two dead", "en", "   ",
+                            "author", "author required"));
+        }
+
+        @Test
+        @DisplayName("The one where the headline, body, language and author are all present, and the update becomes a new version")
+        void completeUpdateBecomesANewVersion() throws Exception {
+            String guid = createAndReadGuid();
+
+            mockMvc.perform(put("/api/news-items/{guid}", guid)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(updateJson("Floods hit Cape Town, two dead", "en", "Thandi Nkosi")))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.version").value(2));
+        }
+
+        @ParameterizedTest(name = "The one where the {0}, and the update is rejected with a reason and the item stays at version 1")
+        @MethodSource("rejectedUpdates")
+        @DisplayName("A rejected update creates no version")
+        void incompleteUpdateIsRejectedAndCreatesNoVersion(String condition, String headline, String language,
+                                                           String author, String expectedField,
+                                                           String expectedDetail) throws Exception {
+            String guid = createAndReadGuid();
+
+            mockMvc.perform(put("/api/news-items/{guid}", guid)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(updateJson(headline, language, author)))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.field").value(expectedField))
+                    .andExpect(jsonPath("$.detail").value(expectedDetail));
+
+            mockMvc.perform(get("/api/news-items/{guid}", guid).accept(MediaType.APPLICATION_XML))
+                    .andExpect(status().isOk())
+                    .andExpect(xpath("/n:newsItem/@version", NAMESPACES).string("1"))
+                    .andExpect(xpath("/n:newsItem/n:contentMeta/n:headline", NAMESPACES)
+                            .string("Floods hit Cape Town"));
+        }
+
+        private String updateJson(String headline, String language, String author) {
+            return """
+                    {
+                      "headline": "%s",
+                      "body": "Rain fell.\\n\\nRoads closed.\\n\\nSchools shut.",
+                      "language": "%s",
+                      "author": "%s",
+                      "version": 1
+                    }
+                    """.formatted(headline, language, author);
+        }
+
+        private String createAndReadGuid() throws Exception {
+            String response = mockMvc.perform(post("/api/news-items")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {
+                                      "headline": "Floods hit Cape Town",
+                                      "body": "Rain fell.\\n\\nRoads closed.\\n\\nSchools shut.",
+                                      "language": "en"
+                                    }
+                                    """))
+                    .andExpect(status().isCreated())
+                    .andReturn().getResponse().getContentAsString();
+            return JsonPath.read(response, "$.guid");
         }
     }
 }
