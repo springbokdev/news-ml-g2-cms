@@ -86,6 +86,30 @@ class ArticleContentTest {
     }
 
     @Nested
+    @DisplayName("Must save an accepted update as a new version of the same news item")
+    class MustSaveAcceptedUpdateAsNewVersionOfSameNewsItem {
+
+        @Test
+        @DisplayName("The one where the item is at version 1 and the editor sends a new headline with the same body and en, and the item is now version 2 with the new headline and the same GUID")
+        void acceptedUpdateIsTheNextVersionWithTheSameGuid() {
+            ArticleContent version1 = ArticleContent.create(
+                    "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
+                    "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
+
+            ArticleContent version2 = version1.update(
+                    "Floods hit Cape Town, two dead", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
+                    OffsetDateTime.parse("2026-10-17T08:15:00+02:00"));
+
+            assertThat(version2.version()).isEqualTo(2);
+            assertThat(version2.guid()).isEqualTo(version1.guid());
+            assertThat(version2.headline()).isEqualTo("Floods hit Cape Town, two dead");
+            assertThat(version2.body()).isEqualTo("Rain fell.\n\nRoads closed.\n\nSchools shut.");
+            assertThat(version2.language()).isEqualTo("en");
+            assertThat(version2.versionCreated()).isEqualTo(OffsetDateTime.parse("2026-10-17T08:15:00+02:00"));
+        }
+    }
+
+    @Nested
     @DisplayName("Must populate the mandatory NewsML-G2 metadata on every news item")
     class MustPopulateMandatoryNewsMlG2Metadata {
 

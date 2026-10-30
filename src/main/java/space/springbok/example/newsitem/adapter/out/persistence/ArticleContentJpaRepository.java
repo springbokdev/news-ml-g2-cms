@@ -6,6 +6,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 interface ArticleContentJpaRepository extends JpaRepository<ArticleContentEntity, UUID> {
 
-    Optional<ArticleContentEntity> findByGuid(String guid);
+    Optional<ArticleContentEntity> findFirstByGuidOrderByVersionDesc(String guid);
 
 }
