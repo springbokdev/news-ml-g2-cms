@@ -1,12 +1,12 @@
 spring:
   application:
     name: news-ml-g2-cms
-  # Production persistence is PostgreSQL; override via environment variables.
-  # Run without PostgreSQL using the 'local' profile (in-memory H2).
+  # Persistence is PostgreSQL. Defaults target the local development database;
+  # override via environment variables.
   datasource:
-    url: ${DB_URL:jdbc:postgresql://localhost:5432/demo_app}
-    username: ${DB_USERNAME:demo_app}
-    password: ${DB_PASSWORD:demo_app}
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/newsml_db}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
   jpa:
     # Flyway owns the schema; Hibernate only checks the mappings against it.
     hibernate:

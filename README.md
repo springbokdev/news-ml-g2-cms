@@ -60,44 +60,25 @@ The project includes a PostToolUse hook that automatically runs `mvn test` after
 ./mvnw verify                            # Unit + acceptance tests
 ./mvnw -Dtest=DemoApplicationTest test # Single test class
 ./mvnw spring-boot:run                   # Run the app (needs PostgreSQL)
-./mvnw spring-boot:run -Dspring-boot.run.profiles=local  # Run on in-memory H2, no PostgreSQL
 ./mvnw clean package                     # Build the JAR
 ```
 
 ### Running locally with PostgreSQL
 
 `spring-boot:run` needs a PostgreSQL instance. The connection is configured in
-`src/main/resources/application.yaml` and overridable via `DB_URL` / `DB_USERNAME` /
-`DB_PASSWORD`. To start one with Docker:
+`src/main/resources/application.yaml` and defaults to database `newsml_db` on
+`localhost:5432` as user `postgres` with password `postgres`; override via `DB_URL` /
+`DB_USERNAME` / `DB_PASSWORD`. To start an instance with Docker:
 
 ```bash
-docker run --name demo-app-pg -e POSTGRES_DB=demo_app \
-  -e POSTGRES_USER=demo_app -e POSTGRES_PASSWORD=demo_app -p 5432:5432 -d postgres:17
+docker run --name news-ml-postgres-dev -e POSTGRES_DB=newsml_db \
+  -e POSTGRES_PASSWORD=postgres -p 127.0.0.1:5432:5432 -d postgres:18
+./mvnw spring-boot:run
 ```
+
+Flyway creates the schema at startup and the data persists between runs.
 
 Tests don't need this — they run against H2 in PostgreSQL compatibility mode.
-
-### Running locally without PostgreSQL
-
-The `local` profile runs the app on in-memory H2 in PostgreSQL compatibility mode
-(`src/main/resources/application-local.yaml`). Flyway creates the schema at startup;
-data is lost when the app stops.
-
-```bash
-./mvnw spring-boot:run -Dspring-boot.run.profiles=local
-```
-
-To browse the data, open the H2 console at http://localhost:8080/h2-console (enabled only
-in the `local` profile) and connect with:
-
-| Field | Value |
-|---|---|
-| Driver Class | `org.h2.Driver` |
-| JDBC URL | `jdbc:h2:mem:newsml;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH` |
-| User Name | `sa` |
-| Password | *(empty)* |
-
-Use the full JDBC URL — it must match the settings the app opened the database with.
 
 ### With Claude Code
 
