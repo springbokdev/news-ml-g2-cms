@@ -1,6 +1,7 @@
 package space.springbok.example.acceptance;
 
 import com.jayway.jsonpath.JsonPath;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -35,14 +36,26 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * Acceptance tests for doc/specs/update-news-item.md
  * "As an editor, I want to update an existing news item
  * so that corrections and updates can be distributed."
+ *
+ * <p>The whole class runs on a {@link MutableClock} on Johannesburg time. It is reset to
+ * {@link MutableClockConfig#START} before every test, so no test sees the time another left behind.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
+@Import(UpdateNewsItemAcceptanceIT.MutableClockConfig.class)
 @DisplayName("Update a news item")
 class UpdateNewsItemAcceptanceIT {
 
     @Autowired
     private MockMvc mockMvc;
+
+    @Autowired
+    private MutableClock clock;
+
+    @BeforeEach
+    void resetClock() {
+        clock.setInstant(MutableClockConfig.START);
+    }
 
     @Nested
     @DisplayName("Must save an accepted update as a new version of the same news item")
@@ -277,23 +290,23 @@ class UpdateNewsItemAcceptanceIT {
     /** Runs the application on Johannesburg time, so versionCreated carries the +02:00 offset the spec shows. */
     @TestConfiguration
     static class MutableClockConfig {
+
+        /** 2026-10-16T09:30:00+02:00, when the spec's version 1 is created. */
+        static final Instant START = Instant.parse("2026-10-16T07:30:00Z");
+
         @Bean
         @Primary
         MutableClock mutableClock() {
-            return new MutableClock(Instant.parse("2026-10-16T07:30:00Z"), ZoneId.of("Africa/Johannesburg"));
+            return new MutableClock(START, ZoneId.of("Africa/Johannesburg"));
         }
     }
 
     @Nested
-    @Import(MutableClockConfig.class)
     @DisplayName("Must provide the modification history of a news item")
     class MustProvideTheModificationHistoryOfANewsItem {
 
         private static final Instant VERSION_1_CREATED = Instant.parse("2026-10-16T07:30:00Z");   // 2026-10-16T09:30:00+02:00
         private static final Instant VERSION_2_CREATED = Instant.parse("2026-10-17T06:15:00Z");   // 2026-10-17T08:15:00+02:00
-
-        @Autowired
-        private MutableClock clock;
 
         @Test
         @DisplayName("The one where an item has two versions, and its history is version 1 by Sipho Dlamini at 2026-10-16T09:30:00+02:00 followed by version 2 by Thandi Nkosi at 2026-10-17T08:15:00+02:00")
@@ -366,7 +379,6 @@ class UpdateNewsItemAcceptanceIT {
     }
 
     @Nested
-    @Import(MutableClockConfig.class)
     @DisplayName("Must keep every previous version retrievable")
     class MustKeepEveryPreviousVersionRetrievable {
 
@@ -375,9 +387,6 @@ class UpdateNewsItemAcceptanceIT {
 
         private static final Instant VERSION_1_CREATED = Instant.parse("2026-10-16T07:30:00Z");   // 2026-10-16T09:30:00+02:00
         private static final Instant VERSION_2_CREATED = Instant.parse("2026-10-17T06:15:00Z");   // 2026-10-17T08:15:00+02:00
-
-        @Autowired
-        private MutableClock clock;
 
         @Test
         @DisplayName("The one where an item is at version 2, and fetching it by GUID returns the version 2 XML with headline \"Floods hit Cape Town, two dead\"")
