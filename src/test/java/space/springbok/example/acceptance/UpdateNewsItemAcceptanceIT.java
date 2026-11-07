@@ -556,16 +556,16 @@ class UpdateNewsItemAcceptanceIT {
 
         static Stream<Arguments> acceptedUpdates() {
             return Stream.of(
-                    Arguments.of(1, "Floods hit Cape Town, two dead", 2),
-                    Arguments.of(2, "Floods hit Cape Town, three dead", 3),
-                    Arguments.of(2, "Floods hit Cape Town, two dead", 3));
+                    Arguments.of(1, "accepted", "Floods hit Cape Town, two dead", 2),
+                    Arguments.of(2, "accepted", "Floods hit Cape Town, three dead", 3),
+                    Arguments.of(2, "accepted, content identical to version 2", "Floods hit Cape Town, two dead", 3));
         }
 
-        @ParameterizedTest(name = "The one where the current version is {0} and an update with headline \"{1}\" is accepted, and the resulting version is {2}")
+        @ParameterizedTest(name = "The one where the current version is {0} and the update is {1}, and the resulting version is {3}")
         @MethodSource("acceptedUpdates")
         @DisplayName("An accepted update gets the next version number, even when nothing changed")
-        void acceptedUpdateGetsTheNextVersionNumber(int currentVersion, String headline, int resultingVersion)
-                throws Exception {
+        void acceptedUpdateGetsTheNextVersionNumber(int currentVersion, String update, String headline,
+                                                    int resultingVersion) throws Exception {
             String guid = itemAtVersion(currentVersion);
 
             mockMvc.perform(put("/api/news-items/{guid}", guid)
