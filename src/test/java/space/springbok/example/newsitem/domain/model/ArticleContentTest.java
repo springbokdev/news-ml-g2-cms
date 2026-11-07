@@ -115,7 +115,7 @@ class ArticleContentTest {
 
             ArticleContent version2 = version1.update(
                     "Floods hit Cape Town, two dead", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
-                    "Thandi Nkosi", OffsetDateTime.parse("2026-10-17T08:15:00+02:00"));
+                    "Thandi Nkosi", 1, OffsetDateTime.parse("2026-10-17T08:15:00+02:00"));
 
             assertThat(version2.version()).isEqualTo(2);
             assertThat(version2.guid()).isEqualTo(version1.guid());
@@ -139,10 +139,41 @@ class ArticleContentTest {
 
             assertThatThrownBy(() -> version1.update(
                     "Floods hit Cape Town, two dead", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
-                    "   ", OffsetDateTime.parse("2026-10-17T08:15:00+02:00")))
+                    "   ", 1, OffsetDateTime.parse("2026-10-17T08:15:00+02:00")))
                     .isInstanceOf(MissingRequiredFieldException.class)
                     .extracting("field")
                     .isEqualTo("author");
+        }
+    }
+
+    @Nested
+    @DisplayName("Must reject an update that was not made against the latest version")
+    class MustRejectAnUpdateThatWasNotMadeAgainstTheLatestVersion {
+
+        static Stream<Arguments> updatesNotMadeAgainstTheLatestVersion() {
+            return Stream.of(
+                    Arguments.of(3, 2),
+                    Arguments.of(2, 5));
+        }
+
+        @ParameterizedTest(name = "The one where the latest version is {0} and the editor edited version {1}, and the update is rejected as a conflict")
+        @MethodSource("updatesNotMadeAgainstTheLatestVersion")
+        void updateNotMadeAgainstTheLatestVersionIsRejected(int latestVersion, int editedVersion) {
+            ArticleContent latest = ArticleContent.create(
+                    "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
+                    "Sipho Dlamini", "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
+            while (latest.version() < latestVersion) {
+                latest = latest.update(
+                        "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
+                        "Thandi Nkosi", latest.version(), OffsetDateTime.parse("2026-10-17T08:15:00+02:00"));
+            }
+            ArticleContent atLatest = latest;
+
+            assertThatThrownBy(() -> atLatest.update(
+                    "Floods hit Cape Town, two dead", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
+                    "Thandi Nkosi", editedVersion, OffsetDateTime.parse("2026-10-18T10:00:00+02:00")))
+                    .isInstanceOf(VersionConflictException.class)
+                    .hasMessage("update was not made against the latest version");
         }
     }
 
@@ -169,7 +200,7 @@ class ArticleContentTest {
 
             ArticleContent version2 = version1.update(
                     "Floods hit Cape Town, two dead", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
-                    "Thandi Nkosi", OffsetDateTime.parse("2026-10-17T08:15:00+02:00"));
+                    "Thandi Nkosi", 1, OffsetDateTime.parse("2026-10-17T08:15:00+02:00"));
 
             assertThat(version2.author()).isEqualTo("Thandi Nkosi");
             assertThat(version2.versionCreated()).isEqualTo(OffsetDateTime.parse("2026-10-17T08:15:00+02:00"));

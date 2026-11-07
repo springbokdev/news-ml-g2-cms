@@ -33,7 +33,10 @@ public record ArticleContent(NewsItemGuid guid, String headline, String body, St
     }
 
     public ArticleContent update(String headline, String body, String language, String author,
-                                 OffsetDateTime updatedAt) {
+                                 int editedVersion, OffsetDateTime updatedAt) {
+        if (editedVersion != version) {
+            throw new VersionConflictException();
+        }
         return new ArticleContent(guid, headline, body, language, author, version + 1, updatedAt);
     }
 

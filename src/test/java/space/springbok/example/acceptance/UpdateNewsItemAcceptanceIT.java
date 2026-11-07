@@ -460,4 +460,90 @@ class UpdateNewsItemAcceptanceIT {
             return guid;
         }
     }
+
+    @Nested
+    @DisplayName("Must reject an update that was not made against the latest version")
+    class MustRejectAnUpdateThatWasNotMadeAgainstTheLatestVersion {
+
+        private static final Map<String, String> NAMESPACES = Map.of(
+                "n", "http://iptc.org/std/nar/2006-10-01/");
+
+        static Stream<Arguments> updatesNotMadeAgainstTheLatestVersion() {
+            return Stream.of(
+                    Arguments.of(3, 2),
+                    Arguments.of(2, 5));
+        }
+
+        @Test
+        @DisplayName("The one where the latest version is 2 and the editor edited version 2, and the update is accepted as version 3")
+        void updateMadeAgainstTheLatestVersionIsAccepted() throws Exception {
+            String guid = itemAtVersion(2);
+
+            mockMvc.perform(put("/api/news-items/{guid}", guid)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(updateJson(2)))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.guid").value(guid))
+                    .andExpect(jsonPath("$.version").value(3));
+
+            mockMvc.perform(get("/api/news-items/{guid}", guid).accept(MediaType.APPLICATION_XML))
+                    .andExpect(status().isOk())
+                    .andExpect(xpath("/n:newsItem/@version", NAMESPACES).string("3"));
+        }
+
+        @ParameterizedTest(name = "The one where the latest version is {0} and the editor edited version {1}, and the update is rejected as a conflict and the item stays at version {0}")
+        @MethodSource("updatesNotMadeAgainstTheLatestVersion")
+        @DisplayName("A rejected update creates no version")
+        void updateNotMadeAgainstTheLatestVersionIsRejectedAsAConflict(int latestVersion, int editedVersion)
+                throws Exception {
+            String guid = itemAtVersion(latestVersion);
+
+            mockMvc.perform(put("/api/news-items/{guid}", guid)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(updateJson(editedVersion)))
+                    .andExpect(status().isConflict())
+                    .andExpect(jsonPath("$.field").value("version"))
+                    .andExpect(jsonPath("$.detail").value("update was not made against the latest version"));
+
+            mockMvc.perform(get("/api/news-items/{guid}", guid).accept(MediaType.APPLICATION_XML))
+                    .andExpect(status().isOk())
+                    .andExpect(xpath("/n:newsItem/@version", NAMESPACES).string(String.valueOf(latestVersion)));
+        }
+
+        private String updateJson(int editedVersion) {
+            return """
+                    {
+                      "headline": "Floods hit Cape Town, two dead",
+                      "body": "Rain fell.\\n\\nRoads closed.\\n\\nSchools shut.",
+                      "language": "en",
+                      "author": "Thandi Nkosi",
+                      "version": %d
+                    }
+                    """.formatted(editedVersion);
+        }
+
+        /** Creates an item and updates it until its latest version is the given one; each update names the version it edited. */
+        private String itemAtVersion(int latestVersion) throws Exception {
+            String response = mockMvc.perform(post("/api/news-items")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {
+                                      "headline": "Floods hit Cape Town",
+                                      "body": "Rain fell.\\n\\nRoads closed.\\n\\nSchools shut.",
+                                      "language": "en",
+                                      "author": "Sipho Dlamini"
+                                    }
+                                    """))
+                    .andExpect(status().isCreated())
+                    .andReturn().getResponse().getContentAsString();
+            String guid = JsonPath.read(response, "$.guid");
+            for (int edited = 1; edited < latestVersion; edited++) {
+                mockMvc.perform(put("/api/news-items/{guid}", guid)
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(updateJson(edited)))
+                        .andExpect(status().isOk());
+            }
+            return guid;
+        }
+    }
 }

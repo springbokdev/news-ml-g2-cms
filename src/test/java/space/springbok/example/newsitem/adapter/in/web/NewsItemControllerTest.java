@@ -30,6 +30,7 @@ import space.springbok.example.newsitem.domain.model.ArticleContent;
 import space.springbok.example.newsitem.domain.model.MissingRequiredFieldException;
 import space.springbok.example.newsitem.domain.model.NewsItemGuid;
 import space.springbok.example.newsitem.domain.model.NewsItemNotFoundException;
+import space.springbok.example.newsitem.domain.model.VersionConflictException;
 
 @WebMvcTest(NewsItemController.class)
 @Import({CreateNewsItemResponseMapperImpl.class, UpdateNewsItemResponseMapperImpl.class,
@@ -233,7 +234,7 @@ class NewsItemControllerTest {
                 "Sipho Dlamini", "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
         ArticleContent version2 = version1.update(
                 "Floods hit Cape Town, two dead", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
-                "Thandi Nkosi", OffsetDateTime.parse("2026-10-17T08:15:00+02:00"));
+                "Thandi Nkosi", 1, OffsetDateTime.parse("2026-10-17T08:15:00+02:00"));
         given(getNewsItemHistoryUseCase.getNewsItemHistory(version1.guid().value()))
                 .willReturn(List.of(version1, version2));
 
@@ -280,7 +281,7 @@ class NewsItemControllerTest {
         given(updateNewsItemUseCase.updateNewsItem(any(UpdateNewsItemCommand.class)))
                 .willReturn(version1.update(
                         "Floods hit Cape Town, two dead", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
-                        "Thandi Nkosi", OffsetDateTime.parse("2026-10-17T08:15:00+02:00")));
+                        "Thandi Nkosi", 1, OffsetDateTime.parse("2026-10-17T08:15:00+02:00")));
 
         assertThat(mvc.put().uri("/api/news-items/{guid}", version1.guid().value())
                 .contentType(MediaType.APPLICATION_JSON)
@@ -303,6 +304,32 @@ class NewsItemControllerTest {
         then(updateNewsItemUseCase).should().updateNewsItem(new UpdateNewsItemCommand(
                 version1.guid().value(),
                 "Floods hit Cape Town, two dead", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
-                "Thandi Nkosi"));
+                "Thandi Nkosi", 1));
+    }
+
+    @Test
+    @DisplayName("The one where the update was not made against the latest version, and the response is a 409 naming the version field")
+    void updateNotMadeAgainstTheLatestVersionIsConflictNamingTheVersionField() {
+        willThrow(new VersionConflictException())
+                .given(updateNewsItemUseCase).updateNewsItem(any(UpdateNewsItemCommand.class));
+
+        assertThat(mvc.put().uri("/api/news-items/{guid}", "urn:newsml:springbok.space:20261016:3f2b9c1e")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                          "headline": "Floods hit Cape Town, two dead",
+                          "body": "Rain fell.\\n\\nRoads closed.\\n\\nSchools shut.",
+                          "language": "en",
+                          "author": "Thandi Nkosi",
+                          "version": 2
+                        }
+                        """))
+                .hasStatus(HttpStatus.CONFLICT)
+                .bodyJson()
+                .satisfies(json -> {
+                    assertThat(json).extractingPath("$.field").isEqualTo("version");
+                    assertThat(json).extractingPath("$.detail")
+                            .isEqualTo("update was not made against the latest version");
+                });
     }
 }
