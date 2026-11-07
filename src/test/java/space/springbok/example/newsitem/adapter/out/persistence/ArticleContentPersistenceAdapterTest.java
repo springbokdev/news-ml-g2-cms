@@ -13,6 +13,8 @@ import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabas
 import org.springframework.context.annotation.Import;
 import org.springframework.dao.DataIntegrityViolationException;
 import space.springbok.example.newsitem.domain.model.ArticleContent;
+import space.springbok.example.newsitem.domain.model.NewsItemGuid;
+import space.springbok.example.newsitem.domain.model.VersionConflictException;
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
@@ -191,6 +193,37 @@ class ArticleContentPersistenceAdapterTest {
         second.setVersionCreated(OffsetDateTime.parse("2026-10-16T09:30:00+02:00"));
 
         assertThatThrownBy(() -> repository.saveAndFlush(second))
+                .isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    @Test
+    @DisplayName("The one where two editors both edit version 1 and the first update is stored as version 2, and storing the second is rejected as a conflict")
+    void secondUpdateOfTheSameVersionIsRejectedAsAConflict() {
+        ArticleContent version1 = ArticleContent.create(
+                "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
+                "Sipho Dlamini", "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
+        ArticleContent firstEditorsVersion2 = version1.update(
+                "Floods hit Cape Town, two dead", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
+                "Thandi Nkosi", 1, OffsetDateTime.parse("2026-10-17T08:15:00+02:00"));
+        ArticleContent secondEditorsVersion2 = version1.update(
+                "Floods hit Cape Town, three dead", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
+                "Lerato Mokoena", 1, OffsetDateTime.parse("2026-10-17T08:16:00+02:00"));
+        adapter.save(version1);
+        adapter.save(firstEditorsVersion2);
+
+        assertThatThrownBy(() -> adapter.save(secondEditorsVersion2))
+                .isInstanceOf(VersionConflictException.class);
+    }
+
+    @Test
+    @DisplayName("The one where article content without a versionCreated is stored, and the database failure is not reported as a version conflict")
+    void otherIntegrityFailureIsNotReportedAsAVersionConflict() {
+        ArticleContent withoutVersionCreated = new ArticleContent(
+                new NewsItemGuid("urn:newsml:springbok.space:20261016:3f2b9c1e"),
+                "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
+                "Sipho Dlamini", 1, null);
+
+        assertThatThrownBy(() -> adapter.save(withoutVersionCreated))
                 .isInstanceOf(DataIntegrityViolationException.class);
     }
 }
