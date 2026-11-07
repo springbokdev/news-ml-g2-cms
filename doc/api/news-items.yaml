@@ -3,7 +3,8 @@ info:
   title: NewsML-G2 CMS — News Items API
   version: 0.1.0
   description: |
-    Create and update text news items and retrieve them as NewsML-G2 2.34 News Item XML.
+    Create and update text news items, retrieve them as NewsML-G2 2.34 News Item XML,
+    and read their modification history.
 
     Business rules: doc/specs/create-news-item.md, doc/specs/update-news-item.md.
 
@@ -294,6 +295,53 @@ paths:
         '500':
           $ref: '#/components/responses/InternalServerError'
 
+  /api/news-items/{guid}/history:
+    get:
+      tags: [News Items]
+      operationId: getNewsItemHistory
+      summary: Retrieve the modification history of a news item
+      description: |
+        Returns one entry per stored version, oldest first: the version number, the
+        name of its author and the time it was created. An item that was never
+        updated has a single entry for version 1. The author appears only here,
+        never in the News Item XML.
+      parameters:
+        - $ref: '#/components/parameters/Guid'
+      responses:
+        '200':
+          description: The history, oldest version first.
+          content:
+            application/json:
+              schema:
+                type: array
+                minItems: 1
+                items:
+                  $ref: '#/components/schemas/NewsItemHistoryEntry'
+              example:
+                - version: 1
+                  author: Sipho Dlamini
+                  versionCreated: '2026-10-16T09:30:00+02:00'
+                - version: 2
+                  author: Thandi Nkosi
+                  versionCreated: '2026-10-17T08:15:00+02:00'
+        '404':
+          description: |
+            No news item was ever issued with this GUID. A value that is not a
+            well-formed GUID can never have been issued, so it is also answered
+            with 404.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+              example:
+                type: about:blank
+                title: Not Found
+                status: 404
+                detail: news item not found
+                instance: /api/news-items/urn:newsml:springbok.space:20261016:never-issued/history
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
 components:
   responses:
     InternalServerError:
@@ -428,6 +476,29 @@ components:
           minimum: 2
           description: The version created by this update.
           example: 2
+
+    NewsItemHistoryEntry:
+      type: object
+      description: One stored version of a news item.
+      required: [version, author, versionCreated]
+      properties:
+        version:
+          type: integer
+          format: int32
+          minimum: 1
+          description: The version number.
+          example: 1
+        author:
+          type: string
+          description: The name of the author who created this version.
+          example: Sipho Dlamini
+        versionCreated:
+          type: string
+          format: date-time
+          description: |
+            When this version was created, as an ISO 8601 date-time that keeps its
+            UTC offset. It is the same value as `versionCreated` in this version's XML.
+          example: '2026-10-16T09:30:00+02:00'
 
     Problem:
       type: object

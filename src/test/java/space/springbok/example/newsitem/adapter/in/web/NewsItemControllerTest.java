@@ -8,6 +8,7 @@ import static org.mockito.BDDMockito.willThrow;
 
 import java.nio.charset.StandardCharsets;
 import java.time.OffsetDateTime;
+import java.util.List;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,7 @@ import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.assertj.MvcTestResult;
 import space.springbok.example.newsitem.application.port.in.CreateNewsItemCommand;
 import space.springbok.example.newsitem.application.port.in.CreateNewsItemUseCase;
+import space.springbok.example.newsitem.application.port.in.GetNewsItemHistoryUseCase;
 import space.springbok.example.newsitem.application.port.in.GetNewsItemUseCase;
 import space.springbok.example.newsitem.application.port.in.UpdateNewsItemCommand;
 import space.springbok.example.newsitem.application.port.in.UpdateNewsItemUseCase;
@@ -29,7 +31,8 @@ import space.springbok.example.newsitem.domain.model.NewsItemGuid;
 import space.springbok.example.newsitem.domain.model.NewsItemNotFoundException;
 
 @WebMvcTest(NewsItemController.class)
-@Import({CreateNewsItemResponseMapperImpl.class, UpdateNewsItemResponseMapperImpl.class, NewsItemXmlRenderer.class})
+@Import({CreateNewsItemResponseMapperImpl.class, UpdateNewsItemResponseMapperImpl.class,
+        NewsItemHistoryResponseMapperImpl.class, NewsItemXmlRenderer.class})
 @DisplayName("News item web endpoint")
 class NewsItemControllerTest {
 
@@ -44,6 +47,9 @@ class NewsItemControllerTest {
 
     @MockitoBean
     private UpdateNewsItemUseCase updateNewsItemUseCase;
+
+    @MockitoBean
+    private GetNewsItemHistoryUseCase getNewsItemHistoryUseCase;
 
     @Test
     @DisplayName("The one where journalist Sipho Dlamini submits a headline, body and language, and the article is created with its author passed on")
@@ -195,6 +201,31 @@ class NewsItemControllerTest {
                     assertThat(json).extractingPath("$.instance")
                             .isEqualTo("/api/news-items/urn:newsml:springbok.space:20261016:never-issued");
                 });
+    }
+
+    @Test
+    @DisplayName("The one where an item has two versions, and its history is returned as JSON, oldest first, with each version's number, author and versionCreated")
+    void historyIsReturnedAsJsonOldestFirst() {
+        ArticleContent version1 = ArticleContent.create(
+                "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
+                "Sipho Dlamini", "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
+        ArticleContent version2 = version1.update(
+                "Floods hit Cape Town, two dead", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
+                "Thandi Nkosi", OffsetDateTime.parse("2026-10-17T08:15:00+02:00"));
+        given(getNewsItemHistoryUseCase.getNewsItemHistory(version1.guid().value()))
+                .willReturn(List.of(version1, version2));
+
+        assertThat(mvc.get().uri("/api/news-items/{guid}/history", version1.guid().value())
+                .accept(MediaType.APPLICATION_JSON))
+                .hasStatusOk()
+                .hasContentType(MediaType.APPLICATION_JSON)
+                .bodyJson()
+                .isStrictlyEqualTo("""
+                        [
+                          { "version": 1, "author": "Sipho Dlamini", "versionCreated": "2026-10-16T09:30:00+02:00" },
+                          { "version": 2, "author": "Thandi Nkosi", "versionCreated": "2026-10-17T08:15:00+02:00" }
+                        ]
+                        """);
     }
 
     @Test
