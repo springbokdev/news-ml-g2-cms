@@ -30,7 +30,7 @@ class GetNewsItemServiceTest {
     void existingNewsItemIsReturnedByGuid() {
         ArticleContent stored = ArticleContent.create(
                 "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
-                "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
+                "Sipho Dlamini", "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
         given(loadArticleContentPort.findByGuid(stored.guid())).willReturn(Optional.of(stored));
         GetNewsItemService service = new GetNewsItemService(loadArticleContentPort);
 

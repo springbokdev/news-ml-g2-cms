@@ -45,7 +45,7 @@ class UpdateNewsItemServiceTest {
     void acceptedUpdateIsSavedAsTheNextVersion() {
         ArticleContent version1 = ArticleContent.create(
                 "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
-                "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
+                "Sipho Dlamini", "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
         given(loadArticleContentPort.findByGuid(version1.guid())).willReturn(Optional.of(version1));
         UpdateNewsItemService service = new UpdateNewsItemService(loadArticleContentPort, saveArticleContentPort, clock);
 
@@ -85,7 +85,7 @@ class UpdateNewsItemServiceTest {
     void blankAuthorIsRejectedAndNothingIsSaved() {
         ArticleContent version1 = ArticleContent.create(
                 "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
-                "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
+                "Sipho Dlamini", "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
         given(loadArticleContentPort.findByGuid(version1.guid())).willReturn(Optional.of(version1));
         UpdateNewsItemService service = new UpdateNewsItemService(loadArticleContentPort, saveArticleContentPort, clock);
 

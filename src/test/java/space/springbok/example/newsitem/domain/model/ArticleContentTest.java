@@ -32,10 +32,27 @@ class ArticleContentTest {
         void missingRequiredFieldIsRejected(String expectedField, String condition,
                                             String headline, String body, String language) {
             assertThatThrownBy(() -> ArticleContent.create(headline, body, language,
-                    "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e"))
+                    "Sipho Dlamini", "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e"))
                     .isInstanceOf(MissingRequiredFieldException.class)
                     .extracting("field")
                     .isEqualTo(expectedField);
+        }
+    }
+
+    @Nested
+    @DisplayName("Must require an author when a news item is created")
+    class MustRequireAnAuthorWhenANewsItemIsCreated {
+
+        @Test
+        @DisplayName("The one where the author is blank, and the article is rejected: author required")
+        void blankAuthorIsRejected() {
+            assertThatThrownBy(() -> ArticleContent.create(
+                    "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en", "   ",
+                    "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e"))
+                    .isInstanceOf(MissingRequiredFieldException.class)
+                    .hasMessage("author required")
+                    .extracting("field")
+                    .isEqualTo("author");
         }
     }
 
@@ -48,7 +65,7 @@ class ArticleContentTest {
         void malformedLanguageTagIsRejected(String language) {
             assertThatThrownBy(() -> ArticleContent.create(
                     "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", language,
-                    "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e"))
+                    "Sipho Dlamini", "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e"))
                     .isInstanceOf(InvalidLanguageTagException.class)
                     .extracting("field")
                     .isEqualTo("language");
@@ -64,7 +81,7 @@ class ArticleContentTest {
         void guidIsGeneratedWhenTheArticleIsCreated() {
             ArticleContent article = ArticleContent.create(
                     "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
-                    "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
+                    "Sipho Dlamini", "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
 
             assertThat(article.guid().value()).isEqualTo("urn:newsml:springbok.space:20261016:3f2b9c1e");
         }
@@ -79,7 +96,7 @@ class ArticleContentTest {
         void newArticleHasVersionOne() {
             ArticleContent article = ArticleContent.create(
                     "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
-                    "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
+                    "Sipho Dlamini", "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
 
             assertThat(article.version()).isEqualTo(1);
         }
@@ -94,7 +111,7 @@ class ArticleContentTest {
         void acceptedUpdateIsTheNextVersionWithTheSameGuid() {
             ArticleContent version1 = ArticleContent.create(
                     "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
-                    "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
+                    "Sipho Dlamini", "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
 
             ArticleContent version2 = version1.update(
                     "Floods hit Cape Town, two dead", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
@@ -118,7 +135,7 @@ class ArticleContentTest {
         void blankAuthorIsRejected() {
             ArticleContent version1 = ArticleContent.create(
                     "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
-                    "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
+                    "Sipho Dlamini", "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
 
             assertThatThrownBy(() -> version1.update(
                     "Floods hit Cape Town, two dead", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
@@ -126,6 +143,38 @@ class ArticleContentTest {
                     .isInstanceOf(MissingRequiredFieldException.class)
                     .extracting("field")
                     .isEqualTo("author");
+        }
+    }
+
+    @Nested
+    @DisplayName("Must record the author and timestamp of every version")
+    class MustRecordTheAuthorAndTimestampOfEveryVersion {
+
+        @Test
+        @DisplayName("The one where journalist Sipho Dlamini creates \"Floods hit Cape Town\", and version 1 records Sipho Dlamini as its author")
+        void versionOneRecordsItsAuthor() {
+            ArticleContent version1 = ArticleContent.create(
+                    "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
+                    "Sipho Dlamini", "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
+
+            assertThat(version1.author()).isEqualTo("Sipho Dlamini");
+        }
+
+        @Test
+        @DisplayName("The one where editor Thandi Nkosi updates the item at 2026-10-17T08:15:00+02:00, and version 2 records Thandi Nkosi while version 1 still records Sipho Dlamini")
+        void everyVersionRecordsItsOwnAuthor() {
+            ArticleContent version1 = ArticleContent.create(
+                    "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
+                    "Sipho Dlamini", "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
+
+            ArticleContent version2 = version1.update(
+                    "Floods hit Cape Town, two dead", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
+                    "Thandi Nkosi", OffsetDateTime.parse("2026-10-17T08:15:00+02:00"));
+
+            assertThat(version2.author()).isEqualTo("Thandi Nkosi");
+            assertThat(version2.versionCreated()).isEqualTo(OffsetDateTime.parse("2026-10-17T08:15:00+02:00"));
+            assertThat(version1.author()).isEqualTo("Sipho Dlamini");
+            assertThat(version1.versionCreated()).isEqualTo(OffsetDateTime.parse("2026-10-16T09:30:00+02:00"));
         }
     }
 
@@ -138,7 +187,7 @@ class ArticleContentTest {
         void versionCreatedIsTheCreationTimestamp() {
             ArticleContent article = ArticleContent.create(
                     "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
-                    "springbok.space", OffsetDateTime.parse("2026-03-01T14:05:09-05:00"), "3f2b9c1e");
+                    "Sipho Dlamini", "springbok.space", OffsetDateTime.parse("2026-03-01T14:05:09-05:00"), "3f2b9c1e");
 
             assertThat(article.versionCreated()).isEqualTo(OffsetDateTime.parse("2026-03-01T14:05:09-05:00"));
         }

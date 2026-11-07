@@ -40,7 +40,7 @@ class NewsItemServiceTest {
         NewsItemService service = new NewsItemService(saveArticleContentPort, clock, "springbok.space");
 
         service.createNewsItem(new CreateNewsItemCommand(
-                "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en"));
+                "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en", "Sipho Dlamini"));
 
         then(saveArticleContentPort).should().save(articleContentCaptor.capture());
         assertThat(articleContentCaptor.getValue())
@@ -54,7 +54,7 @@ class NewsItemServiceTest {
         NewsItemService service = new NewsItemService(saveArticleContentPort, clock, "springbok.space");
 
         NewsItemGuid guid = service.createNewsItem(new CreateNewsItemCommand(
-                "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en")).guid();
+                "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en", "Sipho Dlamini")).guid();
 
         then(saveArticleContentPort).should().save(articleContentCaptor.capture());
         assertThat(guid).isEqualTo(articleContentCaptor.getValue().guid());
@@ -66,7 +66,7 @@ class NewsItemServiceTest {
         NewsItemService service = new NewsItemService(saveArticleContentPort, clock, "springbok.space");
 
         NewsItemGuid guid = service.createNewsItem(new CreateNewsItemCommand(
-                "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en")).guid();
+                "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en", "Sipho Dlamini")).guid();
 
         assertThat(guid.value()).startsWith("urn:newsml:springbok.space:20261016:");
     }
@@ -76,7 +76,7 @@ class NewsItemServiceTest {
     void sameHeadlineSameDayGetsDifferentGuids() {
         NewsItemService service = new NewsItemService(saveArticleContentPort, clock, "springbok.space");
         CreateNewsItemCommand command = new CreateNewsItemCommand(
-                "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en");
+                "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en", "Sipho Dlamini");
 
         NewsItemGuid first = service.createNewsItem(command).guid();
         NewsItemGuid second = service.createNewsItem(command).guid();
@@ -90,7 +90,7 @@ class NewsItemServiceTest {
         NewsItemService service = new NewsItemService(saveArticleContentPort, clock, "example.org");
 
         NewsItemGuid guid = service.createNewsItem(new CreateNewsItemCommand(
-                "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en")).guid();
+                "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en", "Sipho Dlamini")).guid();
 
         assertThat(guid.value()).startsWith("urn:newsml:example.org:20261016:");
     }
@@ -100,12 +100,26 @@ class NewsItemServiceTest {
     void blankHeadlineIsRejectedOnCreate() {
         NewsItemService service = new NewsItemService(saveArticleContentPort, clock, "springbok.space");
         CreateNewsItemCommand command = new CreateNewsItemCommand(
-                "   ", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en");
+                "   ", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en", "Sipho Dlamini");
 
         assertThatThrownBy(() -> service.createNewsItem(command))
                 .isInstanceOf(MissingRequiredFieldException.class)
                 .extracting("field")
                 .isEqualTo("headline");
+        then(saveArticleContentPort).should(never()).save(any());
+    }
+
+    @Test
+    @DisplayName("The one where the create request has no author, and it is rejected with \"author required\" and nothing is stored")
+    void missingAuthorIsRejectedOnCreateAndNothingIsStored() {
+        NewsItemService service = new NewsItemService(saveArticleContentPort, clock, "springbok.space");
+        CreateNewsItemCommand command = new CreateNewsItemCommand(
+                "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en", null);
+
+        assertThatThrownBy(() -> service.createNewsItem(command))
+                .isInstanceOf(MissingRequiredFieldException.class)
+                .extracting("field")
+                .isEqualTo("author");
         then(saveArticleContentPort).should(never()).save(any());
     }
 }

@@ -54,7 +54,8 @@ class UpdateNewsItemAcceptanceIT {
                                     {
                                       "headline": "Floods hit Cape Town",
                                       "body": "Rain fell.\\n\\nRoads closed.\\n\\nSchools shut.",
-                                      "language": "en"
+                                      "language": "en",
+                                      "author": "Sipho Dlamini"
                                     }
                                     """))
                     .andExpect(status().isCreated())
@@ -184,12 +185,54 @@ class UpdateNewsItemAcceptanceIT {
                                     {
                                       "headline": "Floods hit Cape Town",
                                       "body": "Rain fell.\\n\\nRoads closed.\\n\\nSchools shut.",
-                                      "language": "en"
+                                      "language": "en",
+                                      "author": "Sipho Dlamini"
                                     }
                                     """))
                     .andExpect(status().isCreated())
                     .andReturn().getResponse().getContentAsString();
             return JsonPath.read(response, "$.guid");
+        }
+    }
+
+    @Nested
+    @DisplayName("Must require an author when a news item is created")
+    class MustRequireAnAuthorWhenANewsItemIsCreated {
+
+        @Test
+        @DisplayName("The one where journalist Sipho Dlamini creates \"Floods hit Cape Town\", and version 1 records Sipho Dlamini as its author")
+        void journalistWithAuthorCreatesVersionOne() throws Exception {
+            mockMvc.perform(post("/api/news-items")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {
+                                      "headline": "Floods hit Cape Town",
+                                      "body": "Rain fell.\\n\\nRoads closed.\\n\\nSchools shut.",
+                                      "language": "en",
+                                      "author": "Sipho Dlamini"
+                                    }
+                                    """))
+                    .andExpect(status().isCreated())
+                    .andExpect(jsonPath("$.guid").isNotEmpty())
+                    .andExpect(jsonPath("$.version").value(1));
+        }
+
+        @Test
+        @DisplayName("The one where the create request has no author. It is rejected with \"author required\" and nothing is stored")
+        void createWithoutAuthorIsRejectedAndStoresNothing() throws Exception {
+            mockMvc.perform(post("/api/news-items")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {
+                                      "headline": "Floods hit Cape Town",
+                                      "body": "Rain fell.\\n\\nRoads closed.\\n\\nSchools shut.",
+                                      "language": "en"
+                                    }
+                                    """))
+                    .andExpect(status().isBadRequest())
+                    .andExpect(jsonPath("$.field").value("author"))
+                    .andExpect(jsonPath("$.detail").value("author required"))
+                    .andExpect(jsonPath("$.guid").doesNotExist());
         }
     }
 }

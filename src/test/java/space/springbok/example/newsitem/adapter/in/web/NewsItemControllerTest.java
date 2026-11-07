@@ -46,12 +46,12 @@ class NewsItemControllerTest {
     private UpdateNewsItemUseCase updateNewsItemUseCase;
 
     @Test
-    @DisplayName("The one where a journalist submits a headline, body and language, and the article is created")
-    void returnsCreatedWhenHeadlineBodyAndLanguageArePresent() {
+    @DisplayName("The one where journalist Sipho Dlamini submits a headline, body and language, and the article is created with its author passed on")
+    void returnsCreatedWhenHeadlineBodyLanguageAndAuthorArePresent() {
         given(createNewsItemUseCase.createNewsItem(any(CreateNewsItemCommand.class)))
                 .willReturn(ArticleContent.create(
                         "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
-                        "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e"));
+                        "Sipho Dlamini", "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e"));
 
         assertThat(mvc.post().uri("/api/news-items")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -59,13 +59,14 @@ class NewsItemControllerTest {
                         {
                           "headline": "Floods hit Cape Town",
                           "body": "Rain fell.\\n\\nRoads closed.\\n\\nSchools shut.",
-                          "language": "en"
+                          "language": "en",
+                          "author": "Sipho Dlamini"
                         }
                         """))
                 .hasStatus(HttpStatus.CREATED);
 
         then(createNewsItemUseCase).should().createNewsItem(new CreateNewsItemCommand(
-                "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en"));
+                "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en", "Sipho Dlamini"));
     }
 
     @Test
@@ -74,7 +75,7 @@ class NewsItemControllerTest {
         given(createNewsItemUseCase.createNewsItem(any(CreateNewsItemCommand.class)))
                 .willReturn(ArticleContent.create(
                         "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
-                        "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e"));
+                        "Sipho Dlamini", "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e"));
 
         assertThat(mvc.post().uri("/api/news-items")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -82,7 +83,8 @@ class NewsItemControllerTest {
                         {
                           "headline": "Floods hit Cape Town",
                           "body": "Rain fell.\\n\\nRoads closed.\\n\\nSchools shut.",
-                          "language": "en"
+                          "language": "en",
+                          "author": "Sipho Dlamini"
                         }
                         """))
                 .hasStatus(HttpStatus.CREATED)
@@ -100,7 +102,7 @@ class NewsItemControllerTest {
         given(createNewsItemUseCase.createNewsItem(any(CreateNewsItemCommand.class)))
                 .willReturn(ArticleContent.create(
                         "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
-                        "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e"));
+                        "Sipho Dlamini", "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e"));
 
         assertThat(mvc.post().uri("/api/news-items")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -109,7 +111,8 @@ class NewsItemControllerTest {
                           "guid": "urn:newsml:example.org:20200101:my-own-guid",
                           "headline": "Floods hit Cape Town",
                           "body": "Rain fell.\\n\\nRoads closed.\\n\\nSchools shut.",
-                          "language": "en"
+                          "language": "en",
+                          "author": "Sipho Dlamini"
                         }
                         """))
                 .hasStatus(HttpStatus.CREATED)
@@ -117,7 +120,7 @@ class NewsItemControllerTest {
                 .extractingPath("$.guid").isEqualTo("urn:newsml:springbok.space:20261016:3f2b9c1e");
 
         then(createNewsItemUseCase).should().createNewsItem(new CreateNewsItemCommand(
-                "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en"));
+                "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en", "Sipho Dlamini"));
     }
 
     @Test
@@ -132,7 +135,8 @@ class NewsItemControllerTest {
                         {
                           "headline": "   ",
                           "body": "Rain fell.\\n\\nRoads closed.\\n\\nSchools shut.",
-                          "language": "en"
+                          "language": "en",
+                          "author": "Sipho Dlamini"
                         }
                         """))
                 .hasStatus(HttpStatus.BAD_REQUEST)
@@ -145,7 +149,7 @@ class NewsItemControllerTest {
     void existingNewsItemIsReturnedAsXml() {
         ArticleContent stored = ArticleContent.create(
                 "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
-                "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
+                "Sipho Dlamini", "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
         given(getNewsItemUseCase.getNewsItem(stored.guid().value())).willReturn(stored);
 
         assertThat(mvc.get().uri("/api/news-items/{guid}", stored.guid().value())
@@ -161,7 +165,7 @@ class NewsItemControllerTest {
     void nonAsciiHeadlineIsServedAsUtf8Bytes() throws Exception {
         ArticleContent stored = ArticleContent.create(
                 "Izikhukhula eKapa, café, 水", "Imvula ina kakhulu.", "zu-ZA",
-                "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
+                "Sipho Dlamini", "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
         given(getNewsItemUseCase.getNewsItem(stored.guid().value())).willReturn(stored);
 
         MvcTestResult result = mvc.get().uri("/api/news-items/{guid}", stored.guid().value())
@@ -219,7 +223,7 @@ class NewsItemControllerTest {
     void returnsOkWithGuidAndNextVersionWhenUpdateIsAccepted() {
         ArticleContent version1 = ArticleContent.create(
                 "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
-                "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
+                "Sipho Dlamini", "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
         given(updateNewsItemUseCase.updateNewsItem(any(UpdateNewsItemCommand.class)))
                 .willReturn(version1.update(
                         "Floods hit Cape Town, two dead", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",

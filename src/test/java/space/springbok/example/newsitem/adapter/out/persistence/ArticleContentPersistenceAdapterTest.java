@@ -30,7 +30,7 @@ class ArticleContentPersistenceAdapterTest {
     void savedArticleContentIsStored() {
         adapter.save(ArticleContent.create(
                 "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
-                "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e"));
+                "Sipho Dlamini", "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e"));
 
         assertThat(repository.findAll())
                 .singleElement()
@@ -47,7 +47,7 @@ class ArticleContentPersistenceAdapterTest {
     void savedArticleContentGuidIsStored() {
         adapter.save(ArticleContent.create(
                 "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
-                "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e"));
+                "Sipho Dlamini", "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e"));
 
         assertThat(repository.findAll())
                 .singleElement()
@@ -60,7 +60,7 @@ class ArticleContentPersistenceAdapterTest {
     void savedArticleContentVersionIsStored() {
         adapter.save(ArticleContent.create(
                 "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
-                "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e"));
+                "Sipho Dlamini", "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e"));
 
         assertThat(repository.findAll())
                 .singleElement()
@@ -73,7 +73,7 @@ class ArticleContentPersistenceAdapterTest {
     void loadedArticleContentKeepsItsVersionCreatedWithOffset() {
         ArticleContent saved = ArticleContent.create(
                 "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
-                "springbok.space", OffsetDateTime.parse("2026-03-01T14:05:09-05:00"), "3f2b9c1e");
+                "Sipho Dlamini", "springbok.space", OffsetDateTime.parse("2026-03-01T14:05:09-05:00"), "3f2b9c1e");
         adapter.save(saved);
         repository.flush();
 
@@ -84,11 +84,26 @@ class ArticleContentPersistenceAdapterTest {
     }
 
     @Test
+    @DisplayName("The one where version 1 by Sipho Dlamini is saved and loaded by its GUID, and it still records Sipho Dlamini as its author")
+    void loadedArticleContentKeepsItsAuthor() {
+        ArticleContent saved = ArticleContent.create(
+                "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
+                "Sipho Dlamini", "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
+        adapter.save(saved);
+        repository.flush();
+
+        assertThat(adapter.findByGuid(saved.guid()))
+                .get()
+                .extracting(ArticleContent::author)
+                .isEqualTo("Sipho Dlamini");
+    }
+
+    @Test
     @DisplayName("The one where an item has versions 1 and 2 stored, and loading it by its GUID returns version 2 while version 1 stays stored")
     void loadingByGuidReturnsTheLatestVersionAndKeepsTheEarlierOne() {
         ArticleContent version1 = ArticleContent.create(
                 "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
-                "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
+                "Sipho Dlamini", "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
         ArticleContent version2 = version1.update(
                 "Floods hit Cape Town, two dead", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
                 "Thandi Nkosi", OffsetDateTime.parse("2026-10-17T08:15:00+02:00"));
@@ -108,6 +123,7 @@ class ArticleContentPersistenceAdapterTest {
         withoutVersionCreated.setHeadline("Floods hit Cape Town");
         withoutVersionCreated.setBody("Rain fell.");
         withoutVersionCreated.setLanguage("en");
+        withoutVersionCreated.setAuthor("Sipho Dlamini");
         withoutVersionCreated.setVersion(1);
 
         assertThatThrownBy(() -> repository.saveAndFlush(withoutVersionCreated))
@@ -122,6 +138,7 @@ class ArticleContentPersistenceAdapterTest {
         first.setHeadline("Floods hit Cape Town");
         first.setBody("Rain fell.");
         first.setLanguage("en");
+        first.setAuthor("Sipho Dlamini");
         first.setVersion(1);
         first.setVersionCreated(OffsetDateTime.parse("2026-10-16T09:30:00+02:00"));
         repository.saveAndFlush(first);
@@ -131,6 +148,7 @@ class ArticleContentPersistenceAdapterTest {
         second.setHeadline("Floods hit Cape Town");
         second.setBody("Rain fell.");
         second.setLanguage("en");
+        second.setAuthor("Sipho Dlamini");
         second.setVersion(1);
         second.setVersionCreated(OffsetDateTime.parse("2026-10-16T09:30:00+02:00"));
 
