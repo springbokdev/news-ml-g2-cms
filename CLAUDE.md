@@ -20,8 +20,7 @@ Maven wrapper (`./mvnw`, not `mvn`); Java 25 required (see `pom.xml`).
 - spring-boot-starter-data-jpa
 - spring-boot-starter-validation
 - Flyway
-- PostgreSQL driver (runtime)
-- H2 (test)
+- PostgreSQL driver (runtime, test)
 
 ### Database
 Production persistence is PostgreSQL. The schema is owned by Flyway migrations in
