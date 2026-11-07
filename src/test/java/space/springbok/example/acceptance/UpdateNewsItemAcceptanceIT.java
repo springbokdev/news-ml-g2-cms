@@ -7,9 +7,16 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneId;
 import java.util.Map;
 import java.util.stream.Stream;
 
@@ -233,6 +240,128 @@ class UpdateNewsItemAcceptanceIT {
                     .andExpect(jsonPath("$.field").value("author"))
                     .andExpect(jsonPath("$.detail").value("author required"))
                     .andExpect(jsonPath("$.guid").doesNotExist());
+        }
+    }
+
+    /** A clock the test moves, so that each version of an item can be created at a chosen moment. */
+    static class MutableClock extends Clock {
+
+        private final ZoneId zone;
+        private volatile Instant instant;
+
+        MutableClock(Instant instant, ZoneId zone) {
+            this.instant = instant;
+            this.zone = zone;
+        }
+
+        void setInstant(Instant instant) {
+            this.instant = instant;
+        }
+
+        @Override
+        public ZoneId getZone() {
+            return zone;
+        }
+
+        @Override
+        public Clock withZone(ZoneId zone) {
+            return new MutableClock(instant, zone);
+        }
+
+        @Override
+        public Instant instant() {
+            return instant;
+        }
+    }
+
+    /** Runs the application on Johannesburg time, so versionCreated carries the +02:00 offset the spec shows. */
+    @TestConfiguration
+    static class MutableClockConfig {
+        @Bean
+        @Primary
+        MutableClock mutableClock() {
+            return new MutableClock(Instant.parse("2026-10-16T07:30:00Z"), ZoneId.of("Africa/Johannesburg"));
+        }
+    }
+
+    @Nested
+    @Import(MutableClockConfig.class)
+    @DisplayName("Must provide the modification history of a news item")
+    class MustProvideTheModificationHistoryOfANewsItem {
+
+        private static final Instant VERSION_1_CREATED = Instant.parse("2026-10-16T07:30:00Z");   // 2026-10-16T09:30:00+02:00
+        private static final Instant VERSION_2_CREATED = Instant.parse("2026-10-17T06:15:00Z");   // 2026-10-17T08:15:00+02:00
+
+        @Autowired
+        private MutableClock clock;
+
+        @Test
+        @DisplayName("The one where an item has two versions, and its history is version 1 by Sipho Dlamini at 2026-10-16T09:30:00+02:00 followed by version 2 by Thandi Nkosi at 2026-10-17T08:15:00+02:00")
+        void historyListsEveryVersionOldestFirst() throws Exception {
+            clock.setInstant(VERSION_1_CREATED);
+            String guid = createAs("Sipho Dlamini");
+            clock.setInstant(VERSION_2_CREATED);
+            mockMvc.perform(put("/api/news-items/{guid}", guid)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {
+                                      "headline": "Floods hit Cape Town, two dead",
+                                      "body": "Rain fell.\\n\\nRoads closed.\\n\\nSchools shut.",
+                                      "language": "en",
+                                      "author": "Thandi Nkosi",
+                                      "version": 1
+                                    }
+                                    """))
+                    .andExpect(status().isOk());
+
+            mockMvc.perform(get("/api/news-items/{guid}/history", guid).accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.length()").value(2))
+                    .andExpect(jsonPath("$[0].version").value(1))
+                    .andExpect(jsonPath("$[0].author").value("Sipho Dlamini"))
+                    .andExpect(jsonPath("$[0].versionCreated").value("2026-10-16T09:30:00+02:00"))
+                    .andExpect(jsonPath("$[1].version").value(2))
+                    .andExpect(jsonPath("$[1].author").value("Thandi Nkosi"))
+                    .andExpect(jsonPath("$[1].versionCreated").value("2026-10-17T08:15:00+02:00"));
+        }
+
+        @Test
+        @DisplayName("The one where an item was never updated, and its history has only version 1")
+        void neverUpdatedItemHasOnlyVersionOne() throws Exception {
+            clock.setInstant(VERSION_1_CREATED);
+            String guid = createAs("Sipho Dlamini");
+
+            mockMvc.perform(get("/api/news-items/{guid}/history", guid).accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.length()").value(1))
+                    .andExpect(jsonPath("$[0].version").value(1))
+                    .andExpect(jsonPath("$[0].author").value("Sipho Dlamini"))
+                    .andExpect(jsonPath("$[0].versionCreated").value("2026-10-16T09:30:00+02:00"));
+        }
+
+        @Test
+        @DisplayName("The one where the history of a GUID that was never issued is requested, and the result is \"not found\"")
+        void historyOfANeverIssuedGuidIsNotFound() throws Exception {
+            mockMvc.perform(get("/api/news-items/{guid}/history", "urn:newsml:springbok.space:20261016:never-issued")
+                            .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.detail").value("news item not found"));
+        }
+
+        private String createAs(String author) throws Exception {
+            String response = mockMvc.perform(post("/api/news-items")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {
+                                      "headline": "Floods hit Cape Town",
+                                      "body": "Rain fell.\\n\\nRoads closed.\\n\\nSchools shut.",
+                                      "language": "en",
+                                      "author": "%s"
+                                    }
+                                    """.formatted(author)))
+                    .andExpect(status().isCreated())
+                    .andReturn().getResponse().getContentAsString();
+            return JsonPath.read(response, "$.guid");
         }
     }
 }

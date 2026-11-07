@@ -3,6 +3,7 @@ package space.springbok.example.newsitem.adapter.out.persistence;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
+import jakarta.persistence.EntityManager;
 import java.time.OffsetDateTime;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -24,6 +25,9 @@ class ArticleContentPersistenceAdapterTest {
 
     @Autowired
     private ArticleContentJpaRepository repository;
+
+    @Autowired
+    private EntityManager entityManager;
 
     @Test
     @DisplayName("The one where article content is saved, and its headline, body and language are stored")
@@ -113,6 +117,23 @@ class ArticleContentPersistenceAdapterTest {
 
         assertThat(adapter.findByGuid(version1.guid())).contains(version2);
         assertThat(repository.findAll()).hasSize(2);
+    }
+
+    @Test
+    @DisplayName("The one where an item has versions 1 and 2 stored, and loading its history returns both versions, oldest first")
+    void historyReturnsEveryVersionOldestFirst() {
+        ArticleContent version1 = ArticleContent.create(
+                "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
+                "Sipho Dlamini", "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
+        ArticleContent version2 = version1.update(
+                "Floods hit Cape Town, two dead", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
+                "Thandi Nkosi", OffsetDateTime.parse("2026-10-17T08:15:00+02:00"));
+        adapter.save(version2);
+        adapter.save(version1);
+        repository.flush();
+        entityManager.clear();
+
+        assertThat(adapter.findAllVersionsByGuid(version1.guid())).containsExactly(version1, version2);
     }
 
     @Test
