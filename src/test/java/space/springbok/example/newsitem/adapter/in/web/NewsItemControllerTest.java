@@ -332,4 +332,30 @@ class NewsItemControllerTest {
                             .isEqualTo("update was not made against the latest version");
                 });
     }
+
+    @Test
+    @DisplayName("The one where the update names no version, and it is passed on without one and answered with 400 naming the version field")
+    void updateWithoutVersionIsPassedOnWithoutOne() {
+        willThrow(new MissingRequiredFieldException("version"))
+                .given(updateNewsItemUseCase).updateNewsItem(any(UpdateNewsItemCommand.class));
+
+        assertThat(mvc.put().uri("/api/news-items/{guid}", "urn:newsml:springbok.space:20261016:3f2b9c1e")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {
+                          "headline": "Floods hit Cape Town, two dead",
+                          "body": "Rain fell.\\n\\nRoads closed.\\n\\nSchools shut.",
+                          "language": "en",
+                          "author": "Thandi Nkosi"
+                        }
+                        """))
+                .hasStatus(HttpStatus.BAD_REQUEST)
+                .bodyJson()
+                .extractingPath("$.field").isEqualTo("version");
+
+        then(updateNewsItemUseCase).should().updateNewsItem(new UpdateNewsItemCommand(
+                "urn:newsml:springbok.space:20261016:3f2b9c1e",
+                "Floods hit Cape Town, two dead", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
+                "Thandi Nkosi", null));
+    }
 }
