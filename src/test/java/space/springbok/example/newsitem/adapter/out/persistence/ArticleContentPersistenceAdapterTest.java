@@ -120,6 +120,23 @@ class ArticleContentPersistenceAdapterTest {
     }
 
     @Test
+    @DisplayName("The one where an item has versions 1 and 2 stored, and loading version 1 returns it exactly as it was stored")
+    void loadingAnEarlierVersionReturnsItAsStored() {
+        ArticleContent version1 = ArticleContent.create(
+                "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
+                "Sipho Dlamini", "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
+        ArticleContent version2 = version1.update(
+                "Floods hit Cape Town, two dead", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
+                "Thandi Nkosi", OffsetDateTime.parse("2026-10-17T08:15:00+02:00"));
+        adapter.save(version1);
+        adapter.save(version2);
+        repository.flush();
+        entityManager.clear();
+
+        assertThat(adapter.findByGuidAndVersion(version1.guid(), 1)).contains(version1);
+    }
+
+    @Test
     @DisplayName("The one where an item has versions 1 and 2 stored, and loading its history returns both versions, oldest first")
     void historyReturnsEveryVersionOldestFirst() {
         ArticleContent version1 = ArticleContent.create(

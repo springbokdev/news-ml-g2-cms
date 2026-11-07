@@ -23,6 +23,7 @@ import space.springbok.example.newsitem.application.port.in.CreateNewsItemComman
 import space.springbok.example.newsitem.application.port.in.CreateNewsItemUseCase;
 import space.springbok.example.newsitem.application.port.in.GetNewsItemHistoryUseCase;
 import space.springbok.example.newsitem.application.port.in.GetNewsItemUseCase;
+import space.springbok.example.newsitem.application.port.in.GetNewsItemVersionUseCase;
 import space.springbok.example.newsitem.application.port.in.UpdateNewsItemCommand;
 import space.springbok.example.newsitem.application.port.in.UpdateNewsItemUseCase;
 import space.springbok.example.newsitem.domain.model.ArticleContent;
@@ -50,6 +51,9 @@ class NewsItemControllerTest {
 
     @MockitoBean
     private GetNewsItemHistoryUseCase getNewsItemHistoryUseCase;
+
+    @MockitoBean
+    private GetNewsItemVersionUseCase getNewsItemVersionUseCase;
 
     @Test
     @DisplayName("The one where journalist Sipho Dlamini submits a headline, body and language, and the article is created with its author passed on")
@@ -163,6 +167,24 @@ class NewsItemControllerTest {
                 .hasStatusOk()
                 .hasContentTypeCompatibleWith(MediaType.APPLICATION_XML)
                 .bodyText()
+                .contains("<headline>Floods hit Cape Town</headline>");
+    }
+
+    @Test
+    @DisplayName("The one where an item is at version 2, and fetching version 1 returns 200 with version 1's NewsML-G2 XML")
+    void earlierVersionIsReturnedAsXml() {
+        ArticleContent version1 = ArticleContent.create(
+                "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
+                "Sipho Dlamini", "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
+        given(getNewsItemVersionUseCase.getNewsItemVersion(version1.guid().value(), 1)).willReturn(version1);
+
+        assertThat(mvc.get().uri("/api/news-items/{guid}/versions/{version}", version1.guid().value(), 1)
+                .accept(MediaType.APPLICATION_XML))
+                .hasStatusOk()
+                .hasContentTypeCompatibleWith(MediaType.APPLICATION_XML)
+                .bodyText()
+                .contains("version=\"1\"")
+                .contains("<versionCreated>2026-10-16T09:30:00+02:00</versionCreated>")
                 .contains("<headline>Floods hit Cape Town</headline>");
     }
 

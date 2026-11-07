@@ -30,6 +30,11 @@ class ArticleContentPersistenceAdapter
     }
 
     @Override
+    public Optional<ArticleContent> findByGuidAndVersion(NewsItemGuid guid, int version) {
+        return repository.findByGuidAndVersion(guid.value(), version).map(mapper::toDomain);
+    }
+
+    @Override
     public List<ArticleContent> findAllVersionsByGuid(NewsItemGuid guid) {
         return repository.findAllByGuidOrderByVersionAsc(guid.value()).stream().map(mapper::toDomain).toList();
     }
