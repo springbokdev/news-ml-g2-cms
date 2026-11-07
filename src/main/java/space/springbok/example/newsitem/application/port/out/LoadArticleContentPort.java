@@ -9,6 +9,14 @@ import space.springbok.example.newsitem.domain.model.NewsItemGuid;
  */
 public interface LoadArticleContentPort {
 
+    /**
+     * @return the latest version of the news item
+     */
     Optional<ArticleContent> findByGuid(NewsItemGuid guid);
+
+    /**
+     * @return the given version of the news item, exactly as it was stored; empty if the item has no such version
+     */
+    Optional<ArticleContent> findByGuidAndVersion(NewsItemGuid guid, int version);
 
 }

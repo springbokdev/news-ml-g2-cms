@@ -17,6 +17,7 @@ import space.springbok.example.newsitem.application.port.in.CreateNewsItemComman
 import space.springbok.example.newsitem.application.port.in.CreateNewsItemUseCase;
 import space.springbok.example.newsitem.application.port.in.GetNewsItemHistoryUseCase;
 import space.springbok.example.newsitem.application.port.in.GetNewsItemUseCase;
+import space.springbok.example.newsitem.application.port.in.GetNewsItemVersionUseCase;
 import space.springbok.example.newsitem.application.port.in.UpdateNewsItemCommand;
 import space.springbok.example.newsitem.application.port.in.UpdateNewsItemUseCase;
 import space.springbok.example.newsitem.domain.model.ArticleContent;
@@ -29,6 +30,7 @@ class NewsItemController {
     private final GetNewsItemUseCase getNewsItemUseCase;
     private final UpdateNewsItemUseCase updateNewsItemUseCase;
     private final GetNewsItemHistoryUseCase getNewsItemHistoryUseCase;
+    private final GetNewsItemVersionUseCase getNewsItemVersionUseCase;
     private final CreateNewsItemResponseMapper responseMapper;
     private final UpdateNewsItemResponseMapper updateResponseMapper;
     private final NewsItemHistoryResponseMapper historyResponseMapper;
@@ -44,6 +46,11 @@ class NewsItemController {
     @GetMapping(value = "/api/news-items/{guid}", produces = MediaType.APPLICATION_XML_VALUE)
     ResponseEntity<String> getNewsItem(@PathVariable String guid) {
         return ResponseEntity.ok(xmlRenderer.render(getNewsItemUseCase.getNewsItem(guid)));
+    }
+
+    @GetMapping(value = "/api/news-items/{guid}/versions/{version}", produces = MediaType.APPLICATION_XML_VALUE)
+    ResponseEntity<String> getNewsItemVersion(@PathVariable String guid, @PathVariable int version) {
+        return ResponseEntity.ok(xmlRenderer.render(getNewsItemVersionUseCase.getNewsItemVersion(guid, version)));
     }
 
     @GetMapping(value = "/api/news-items/{guid}/history", produces = MediaType.APPLICATION_JSON_VALUE)

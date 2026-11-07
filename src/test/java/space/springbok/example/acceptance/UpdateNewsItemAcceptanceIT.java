@@ -364,4 +364,91 @@ class UpdateNewsItemAcceptanceIT {
             return JsonPath.read(response, "$.guid");
         }
     }
+
+    @Nested
+    @Import(MutableClockConfig.class)
+    @DisplayName("Must keep every previous version retrievable")
+    class MustKeepEveryPreviousVersionRetrievable {
+
+        private static final Map<String, String> NAMESPACES = Map.of(
+                "n", "http://iptc.org/std/nar/2006-10-01/");
+
+        private static final Instant VERSION_1_CREATED = Instant.parse("2026-10-16T07:30:00Z");   // 2026-10-16T09:30:00+02:00
+        private static final Instant VERSION_2_CREATED = Instant.parse("2026-10-17T06:15:00Z");   // 2026-10-17T08:15:00+02:00
+
+        @Autowired
+        private MutableClock clock;
+
+        @Test
+        @DisplayName("The one where an item is at version 2, and fetching it by GUID returns the version 2 XML with headline \"Floods hit Cape Town, two dead\"")
+        void fetchingByGuidAloneReturnsTheLatestVersion() throws Exception {
+            String guid = createItemAndUpdateItOnce();
+
+            mockMvc.perform(get("/api/news-items/{guid}", guid).accept(MediaType.APPLICATION_XML))
+                    .andExpect(status().isOk())
+                    .andExpect(xpath("/n:newsItem/@version", NAMESPACES).string("2"))
+                    .andExpect(xpath("/n:newsItem/n:contentMeta/n:headline", NAMESPACES)
+                            .string("Floods hit Cape Town, two dead"));
+        }
+
+        @Test
+        @DisplayName("The one where an item is at version 2, and fetching version 1 returns XML with version=\"1\", headline \"Floods hit Cape Town\" and the original versionCreated")
+        void fetchingAnEarlierVersionReturnsThatVersionAsItWasStored() throws Exception {
+            String guid = createItemAndUpdateItOnce();
+
+            mockMvc.perform(get("/api/news-items/{guid}/versions/{version}", guid, 1)
+                            .accept(MediaType.APPLICATION_XML))
+                    .andExpect(status().isOk())
+                    .andExpect(xpath("/n:newsItem/@version", NAMESPACES).string("1"))
+                    .andExpect(xpath("/n:newsItem/n:contentMeta/n:headline", NAMESPACES)
+                            .string("Floods hit Cape Town"))
+                    .andExpect(xpath("/n:newsItem/n:itemMeta/n:versionCreated", NAMESPACES)
+                            .string("2026-10-16T09:30:00+02:00"));
+        }
+
+        @Test
+        @DisplayName("The one where version 3 of an item at version 2 is requested, and the result is \"not found\"")
+        void aVersionThatWasNeverCreatedIsNotFound() throws Exception {
+            String guid = createItemAndUpdateItOnce();
+
+            mockMvc.perform(get("/api/news-items/{guid}/versions/{version}", guid, 3)
+                            .accept(MediaType.APPLICATION_XML))
+                    .andExpect(status().isNotFound())
+                    .andExpect(jsonPath("$.detail").value("news item not found"));
+        }
+
+        /** Creates "Floods hit Cape Town" as version 1 and updates it to version 2, at the spec's two moments. */
+        private String createItemAndUpdateItOnce() throws Exception {
+            clock.setInstant(VERSION_1_CREATED);
+            String createResponse = mockMvc.perform(post("/api/news-items")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {
+                                      "headline": "Floods hit Cape Town",
+                                      "body": "Rain fell.\\n\\nRoads closed.\\n\\nSchools shut.",
+                                      "language": "en",
+                                      "author": "Sipho Dlamini"
+                                    }
+                                    """))
+                    .andExpect(status().isCreated())
+                    .andReturn().getResponse().getContentAsString();
+            String guid = JsonPath.read(createResponse, "$.guid");
+
+            clock.setInstant(VERSION_2_CREATED);
+            mockMvc.perform(put("/api/news-items/{guid}", guid)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content("""
+                                    {
+                                      "headline": "Floods hit Cape Town, two dead",
+                                      "body": "Rain fell.\\n\\nRoads closed.\\n\\nSchools shut.",
+                                      "language": "en",
+                                      "author": "Thandi Nkosi",
+                                      "version": 1
+                                    }
+                                    """))
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.version").value(2));
+            return guid;
+        }
+    }
 }

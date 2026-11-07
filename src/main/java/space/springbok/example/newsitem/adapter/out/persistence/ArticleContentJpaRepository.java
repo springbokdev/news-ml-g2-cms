@@ -9,6 +9,8 @@ interface ArticleContentJpaRepository extends JpaRepository<ArticleContentEntity
 
     Optional<ArticleContentEntity> findFirstByGuidOrderByVersionDesc(String guid);
 
+    Optional<ArticleContentEntity> findByGuidAndVersion(String guid, int version);
+
     List<ArticleContentEntity> findAllByGuidOrderByVersionAsc(String guid);
 
 }
