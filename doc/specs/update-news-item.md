@@ -15,14 +15,15 @@ An update replaces the headline, body and language completely. The new version i
 
 ### Rule: Must require a headline, a body, a language and an author on every update
 
-The same content rules as creation apply: whitespace-only counts as blank, and the language must be a well-formed BCP 47 tag.
+The same content rules as creation apply: whitespace-only counts as blank, and the language must be a well-formed BCP 47 tag. The update must also name the version the editor edited (see "Must reject an update that was not made against the latest version"). The item is at version 1.
 
-| Headline | Body | Language | Author | Outcome |
-|---|---|---|---|---|
-| "Floods hit Cape Town, two dead" | 3 paragraphs | en | Thandi Nkosi | New version |
-| *(blank)* | 3 paragraphs | en | Thandi Nkosi | Rejected: headline required |
-| "Floods hit Cape Town, two dead" | 3 paragraphs | english | Thandi Nkosi | Rejected: not a valid language tag |
-| "Floods hit Cape Town, two dead" | 3 paragraphs | en | *(blank)* | Rejected: author required |
+| Headline | Body | Language | Author | Version edited | Outcome |
+|---|---|---|---|---|---|
+| "Floods hit Cape Town, two dead" | 3 paragraphs | en | Thandi Nkosi | 1 | New version |
+| *(blank)* | 3 paragraphs | en | Thandi Nkosi | 1 | Rejected: headline required |
+| "Floods hit Cape Town, two dead" | 3 paragraphs | english | Thandi Nkosi | 1 | Rejected: not a valid language tag |
+| "Floods hit Cape Town, two dead" | 3 paragraphs | en | *(blank)* | 1 | Rejected: author required |
+| "Floods hit Cape Town, two dead" | 3 paragraphs | en | Thandi Nkosi | *(missing)* | Rejected: version required |
 
 A rejected update creates no version, and the item stays at its current version.
 
