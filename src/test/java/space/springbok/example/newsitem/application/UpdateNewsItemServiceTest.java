@@ -24,6 +24,7 @@ import space.springbok.example.newsitem.domain.model.ArticleContent;
 import space.springbok.example.newsitem.domain.model.MissingRequiredFieldException;
 import space.springbok.example.newsitem.domain.model.NewsItemGuid;
 import space.springbok.example.newsitem.domain.model.NewsItemNotFoundException;
+import space.springbok.example.newsitem.domain.model.VersionConflictException;
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("Updating a news item")
@@ -52,7 +53,7 @@ class UpdateNewsItemServiceTest {
         ArticleContent returned = service.updateNewsItem(new UpdateNewsItemCommand(
                 version1.guid().value(),
                 "Floods hit Cape Town, two dead", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
-                "Thandi Nkosi"));
+                "Thandi Nkosi", 1));
 
         then(saveArticleContentPort).should().save(articleContentCaptor.capture());
         ArticleContent saved = articleContentCaptor.getValue();
@@ -73,7 +74,7 @@ class UpdateNewsItemServiceTest {
         assertThatThrownBy(() -> service.updateNewsItem(new UpdateNewsItemCommand(
                 unissued.value(),
                 "Floods hit Cape Town, two dead", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
-                "Thandi Nkosi")))
+                "Thandi Nkosi", 1)))
                 .isInstanceOf(NewsItemNotFoundException.class)
                 .extracting("guid")
                 .isEqualTo(unissued);
@@ -92,10 +93,33 @@ class UpdateNewsItemServiceTest {
         assertThatThrownBy(() -> service.updateNewsItem(new UpdateNewsItemCommand(
                 version1.guid().value(),
                 "Floods hit Cape Town, two dead", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
-                "   ")))
+                "   ", 1)))
                 .isInstanceOf(MissingRequiredFieldException.class)
                 .extracting("field")
                 .isEqualTo("author");
+        then(saveArticleContentPort).shouldHaveNoInteractions();
+    }
+
+    @Test
+    @DisplayName("The one where the latest version is 3 and the editor edited version 2, and the update is rejected as a conflict and nothing is saved")
+    void updateNotMadeAgainstTheLatestVersionIsRejectedAndNothingIsSaved() {
+        ArticleContent version1 = ArticleContent.create(
+                "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
+                "Sipho Dlamini", "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
+        ArticleContent version2 = version1.update(
+                "Floods hit Cape Town, two dead", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
+                "Thandi Nkosi", 1, OffsetDateTime.parse("2026-10-17T08:15:00+02:00"));
+        ArticleContent version3 = version2.update(
+                "Floods hit Cape Town, three dead", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
+                "Thandi Nkosi", 2, OffsetDateTime.parse("2026-10-17T09:00:00+02:00"));
+        given(loadArticleContentPort.findByGuid(version1.guid())).willReturn(Optional.of(version3));
+        UpdateNewsItemService service = new UpdateNewsItemService(loadArticleContentPort, saveArticleContentPort, clock);
+
+        assertThatThrownBy(() -> service.updateNewsItem(new UpdateNewsItemCommand(
+                version1.guid().value(),
+                "Floods hit Cape Town, two dead", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
+                "Thandi Nkosi", 2)))
+                .isInstanceOf(VersionConflictException.class);
         then(saveArticleContentPort).shouldHaveNoInteractions();
     }
 }

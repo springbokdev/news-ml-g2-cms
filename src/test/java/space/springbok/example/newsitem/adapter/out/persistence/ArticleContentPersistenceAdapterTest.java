@@ -110,7 +110,7 @@ class ArticleContentPersistenceAdapterTest {
                 "Sipho Dlamini", "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
         ArticleContent version2 = version1.update(
                 "Floods hit Cape Town, two dead", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
-                "Thandi Nkosi", OffsetDateTime.parse("2026-10-17T08:15:00+02:00"));
+                "Thandi Nkosi", 1, OffsetDateTime.parse("2026-10-17T08:15:00+02:00"));
         adapter.save(version1);
         adapter.save(version2);
         repository.flush();
@@ -127,7 +127,7 @@ class ArticleContentPersistenceAdapterTest {
                 "Sipho Dlamini", "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
         ArticleContent version2 = version1.update(
                 "Floods hit Cape Town, two dead", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
-                "Thandi Nkosi", OffsetDateTime.parse("2026-10-17T08:15:00+02:00"));
+                "Thandi Nkosi", 1, OffsetDateTime.parse("2026-10-17T08:15:00+02:00"));
         adapter.save(version1);
         adapter.save(version2);
         repository.flush();
@@ -144,7 +144,7 @@ class ArticleContentPersistenceAdapterTest {
                 "Sipho Dlamini", "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
         ArticleContent version2 = version1.update(
                 "Floods hit Cape Town, two dead", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
-                "Thandi Nkosi", OffsetDateTime.parse("2026-10-17T08:15:00+02:00"));
+                "Thandi Nkosi", 1, OffsetDateTime.parse("2026-10-17T08:15:00+02:00"));
         adapter.save(version2);
         adapter.save(version1);
         repository.flush();

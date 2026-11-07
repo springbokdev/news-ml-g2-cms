@@ -216,6 +216,11 @@ paths:
       description: |
         Replaces the headline, body and language completely and stores the result
         as the next version. The GUID never changes and earlier versions are kept.
+
+        The request names the `version` the editor edited, and the update is accepted
+        only if that is still the item's latest version. Otherwise it is rejected as a
+        conflict and nothing is stored, so an editor never silently overwrites another
+        editor's update.
       parameters:
         - $ref: '#/components/parameters/Guid'
       requestBody:
@@ -294,6 +299,24 @@ paths:
                 status: 404
                 detail: news item not found
                 instance: /api/news-items/urn:newsml:springbok.space:20261016:never-issued
+        '409':
+          description: |
+            The update was not made against the latest version: the `version` the
+            editor edited is not the item's latest version, either because another
+            update has been saved since (stale) or because the item never had that
+            version. A rejected update creates no version, and the item stays at its
+            latest version.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/ValidationProblem'
+              example:
+                type: about:blank
+                title: Conflict
+                status: 409
+                detail: update was not made against the latest version
+                instance: /api/news-items/urn:newsml:springbok.space:20261016:3f2b9c1e
+                field: version
         '500':
           $ref: '#/components/responses/InternalServerError'
 
@@ -549,7 +572,9 @@ components:
           type: integer
           format: int32
           minimum: 1
-          description: The version the editor edited.
+          description: |
+            The version the editor edited. The update is accepted only if this is still
+            the item's latest version; a stale or unknown version is a conflict.
           example: 1
 
     UpdateNewsItemResponse:
@@ -621,5 +646,5 @@ components:
               type: string
               description: |
                 The request field that broke a business rule.
-              enum: [headline, body, language, author]
+              enum: [headline, body, language, author, version]
               example: headline

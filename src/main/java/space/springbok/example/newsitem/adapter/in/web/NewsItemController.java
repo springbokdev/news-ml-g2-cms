@@ -62,7 +62,8 @@ class NewsItemController {
     ResponseEntity<UpdateNewsItemResponse> updateNewsItem(@PathVariable String guid,
                                                           @Valid @RequestBody UpdateNewsItemRequest request) {
         ArticleContent updated = updateNewsItemUseCase.updateNewsItem(
-                new UpdateNewsItemCommand(guid, request.headline(), request.body(), request.language(), request.author()));
+                new UpdateNewsItemCommand(guid, request.headline(), request.body(), request.language(), request.author(),
+                        request.version()));
         return ResponseEntity.ok(updateResponseMapper.toResponse(updated));
     }
 }

@@ -9,6 +9,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 import space.springbok.example.newsitem.domain.model.InvalidArticleFieldException;
 import space.springbok.example.newsitem.domain.model.MalformedNewsItemGuidException;
 import space.springbok.example.newsitem.domain.model.NewsItemNotFoundException;
+import space.springbok.example.newsitem.domain.model.VersionConflictException;
 
 /**
  * Central mapping of exceptions to HTTP problem responses.
@@ -26,6 +27,13 @@ class WebExceptionHandler extends ResponseEntityExceptionHandler {
     ProblemDetail invalidArticleField(InvalidArticleFieldException exception) {
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, exception.getMessage());
         problem.setProperty("field", exception.field());
+        return problem;
+    }
+
+    @ExceptionHandler(VersionConflictException.class)
+    ProblemDetail versionConflict(VersionConflictException exception) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
+        problem.setProperty("field", "version");
         return problem;
     }
 
