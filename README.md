@@ -49,7 +49,7 @@ The project includes a PostToolUse hook that automatically runs `mvn test` after
 
 **Hexagonal architecture** — Domain code is framework-free. Spring and JPA live only in adapters. This makes the domain testable with plain JUnit — no Spring context needed.
 
-**In-memory repositories for tests** — Acceptance tests use in-memory implementations of outbound ports, so they run fast without a database. Repository tests use `@DataJpaTest` with H2 in PostgreSQL compatibility mode.
+**In-memory repositories for tests** — Acceptance tests use in-memory implementations of outbound ports, so they run fast without a database. Repository tests use `@DataJpaTest` against PostgreSQL 18 in a Docker container started by Testcontainers.
 
 **Specs as the source of truth** — Feature specifications in `doc/specs/` define the contract. Acceptance tests verify the contract. Production code implements it. When specs change, tests change first.
 
@@ -83,7 +83,8 @@ Flyway creates the schema at startup and the data persists between runs in a Doc
 The username and password only take effect when that volume is first created;
 `docker compose down -v` deletes the volume and all its data.
 
-Tests don't need this — they run against H2 in PostgreSQL compatibility mode.
+Tests don't need this database or these variables: Testcontainers starts their own
+PostgreSQL 18 in Docker. Docker must be running for `./mvnw test` and `./mvnw verify`.
 
 ### With Claude Code
 

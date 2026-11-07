@@ -77,10 +77,11 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- H2 in PostgreSQL compatibility mode: tests only -->
+        <!-- Tests run against a real PostgreSQL in Docker, started by Testcontainers from the
+             jdbc:tc: URL in src/test/resources/application.properties. Version managed by Boot. -->
         <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers-postgresql</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

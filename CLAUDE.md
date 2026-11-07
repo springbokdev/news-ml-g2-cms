@@ -9,7 +9,7 @@ and packages of text, images, video, audio news and event or sports data.
 
 Maven wrapper (`./mvnw`, not `mvn`); Java 25 required (see `pom.xml`).
 
-- `./mvnw test` — unit tests (H2 in PostgreSQL mode, no Docker needed).
+- `./mvnw test` — unit tests (PostgreSQL 18 via Testcontainers; Docker must be running).
 - `./mvnw verify` — unit + acceptance (`*IT`) tests.
 - `./mvnw -Dtest=ClassName#method test` — single test class/method.
 - `docker compose up -d --wait` — starts the local PostgreSQL from `compose.yaml`.
