@@ -65,7 +65,8 @@ class NewsItemAcceptanceIT {
                     {
                       "headline": "Floods hit Cape Town",
                       "body": "Rain fell.\\n\\nRoads closed.\\n\\nSchools shut.",
-                      "language": "en"
+                      "language": "en",
+                      "author": "Sipho Dlamini"
                     }
                     """;
 
@@ -82,7 +83,8 @@ class NewsItemAcceptanceIT {
                     {
                       "headline": "   ",
                       "body": "Rain fell.\\n\\nRoads closed.\\n\\nSchools shut.",
-                      "language": "en"
+                      "language": "en",
+                      "author": "Sipho Dlamini"
                     }
                     """;
 
@@ -100,7 +102,8 @@ class NewsItemAcceptanceIT {
                     {
                       "headline": "Floods hit Cape Town",
                       "body": "",
-                      "language": "en"
+                      "language": "en",
+                      "author": "Sipho Dlamini"
                     }
                     """;
 
@@ -117,7 +120,8 @@ class NewsItemAcceptanceIT {
             String requestBody = """
                     {
                       "headline": "Floods hit Cape Town",
-                      "body": "Rain fell.\\n\\nRoads closed.\\n\\nSchools shut."
+                      "body": "Rain fell.\\n\\nRoads closed.\\n\\nSchools shut.",
+                      "author": "Sipho Dlamini"
                     }
                     """;
 
@@ -140,7 +144,8 @@ class NewsItemAcceptanceIT {
                     {
                       "headline": "Floods hit Cape Town",
                       "body": "Rain fell.\\n\\nRoads closed.\\n\\nSchools shut.",
-                      "language": "en"
+                      "language": "en",
+                      "author": "Sipho Dlamini"
                     }
                     """;
 
@@ -157,7 +162,8 @@ class NewsItemAcceptanceIT {
                     {
                       "headline": "Floods hit Cape Town",
                       "body": "Rain fell.\\n\\nRoads closed.\\n\\nSchools shut.",
-                      "language": "zu-ZA"
+                      "language": "zu-ZA",
+                      "author": "Sipho Dlamini"
                     }
                     """;
 
@@ -174,7 +180,8 @@ class NewsItemAcceptanceIT {
                     {
                       "headline": "Floods hit Cape Town",
                       "body": "Rain fell.\\n\\nRoads closed.\\n\\nSchools shut.",
-                      "language": "english"
+                      "language": "english",
+                      "author": "Sipho Dlamini"
                     }
                     """;
 
@@ -206,7 +213,8 @@ class NewsItemAcceptanceIT {
                 {
                   "headline": "Floods hit Cape Town",
                   "body": "Rain fell.\\n\\nRoads closed.\\n\\nSchools shut.",
-                  "language": "en"
+                  "language": "en",
+                  "author": "Sipho Dlamini"
                 }
                 """;
 
@@ -240,7 +248,8 @@ class NewsItemAcceptanceIT {
                       "guid": "%s",
                       "headline": "Floods hit Cape Town",
                       "body": "Rain fell.\\n\\nRoads closed.\\n\\nSchools shut.",
-                      "language": "en"
+                      "language": "en",
+                      "author": "Sipho Dlamini"
                     }
                     """.formatted(suppliedGuid);
 
@@ -272,7 +281,8 @@ class NewsItemAcceptanceIT {
                     {
                       "headline": "Floods hit Cape Town",
                       "body": "Rain fell.\\n\\nRoads closed.\\n\\nSchools shut.",
-                      "language": "en"
+                      "language": "en",
+                      "author": "Sipho Dlamini"
                     }
                     """;
 
@@ -291,7 +301,8 @@ class NewsItemAcceptanceIT {
                       "version": 5,
                       "headline": "Floods hit Cape Town",
                       "body": "Rain fell.\\n\\nRoads closed.\\n\\nSchools shut.",
-                      "language": "en"
+                      "language": "en",
+                      "author": "Sipho Dlamini"
                     }
                     """;
 
@@ -333,7 +344,8 @@ class NewsItemAcceptanceIT {
                     {
                       "headline": "Floods hit Cape Town",
                       "body": "Rain fell.\\n\\nRoads closed.\\n\\nSchools shut.",
-                      "language": "en"
+                      "language": "en",
+                      "author": "Sipho Dlamini"
                     }
                     """);
 
@@ -352,7 +364,8 @@ class NewsItemAcceptanceIT {
                       "pubStatus": "stat:withheld",
                       "headline": "Floods hit Cape Town",
                       "body": "Rain fell.\\n\\nRoads closed.\\n\\nSchools shut.",
-                      "language": "en"
+                      "language": "en",
+                      "author": "Sipho Dlamini"
                     }
                     """);
 
@@ -391,7 +404,8 @@ class NewsItemAcceptanceIT {
                     {
                       "headline": "Floods hit Cape Town",
                       "body": "Rain fell.\\n\\nRoads closed.\\n\\nSchools shut.",
-                      "language": "en"
+                      "language": "en",
+                      "author": "Sipho Dlamini"
                     }
                     """);
 
@@ -410,7 +424,8 @@ class NewsItemAcceptanceIT {
                     {
                       "headline": "Floods hit Cape Town",
                       "body": "Rain fell.",
-                      "language": "en"
+                      "language": "en",
+                      "author": "Sipho Dlamini"
                     }
                     """);
 
@@ -443,7 +458,8 @@ class NewsItemAcceptanceIT {
                     {
                       "headline": "Floods hit Cape Town",
                       "body": "Rain fell.\\n\\nRoads closed.\\n\\nSchools shut.",
-                      "language": "en"
+                      "language": "en",
+                      "author": "Sipho Dlamini"
                     }
                     """);
 
@@ -460,7 +476,8 @@ class NewsItemAcceptanceIT {
                     {
                       "headline": "Q&A: <Budget> 2026",
                       "body": "Rain fell.\\n\\nRoads closed.\\n\\nSchools shut.",
-                      "language": "en"
+                      "language": "en",
+                      "author": "Sipho Dlamini"
                     }
                     """);
 
@@ -511,7 +528,8 @@ class NewsItemAcceptanceIT {
                                     {
                                       "headline": "Floods hit Cape Town",
                                       "body": "Rain fell.\\n\\nRoads closed.\\n\\nSchools shut.",
-                                      "language": "en"
+                                      "language": "en",
+                                      "author": "Sipho Dlamini"
                                     }
                                     """))
                     .andExpect(status().isCreated())

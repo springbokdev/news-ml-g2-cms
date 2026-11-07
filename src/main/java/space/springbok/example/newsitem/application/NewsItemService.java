@@ -28,7 +28,7 @@ class NewsItemService implements CreateNewsItemUseCase {
     @Override
     public ArticleContent createNewsItem(CreateNewsItemCommand command) {
         ArticleContent articleContent = ArticleContent.create(
-                command.headline(), command.body(), command.language(),
+                command.headline(), command.body(), command.language(), command.author(),
                 provider, OffsetDateTime.now(clock), UUID.randomUUID().toString());
         saveArticleContentPort.save(articleContent);
         return articleContent;

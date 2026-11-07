@@ -32,7 +32,7 @@ class NewsItemController {
     @PostMapping("/api/news-items")
     ResponseEntity<CreateNewsItemResponse> createNewsItem(@Valid @RequestBody CreateNewsItemRequest request) {
         ArticleContent created = createNewsItemUseCase.createNewsItem(
-                new CreateNewsItemCommand(request.headline(), request.body(), request.language()));
+                new CreateNewsItemCommand(request.headline(), request.body(), request.language(), request.author()));
         return ResponseEntity.status(HttpStatus.CREATED).body(responseMapper.toResponse(created));
     }
 

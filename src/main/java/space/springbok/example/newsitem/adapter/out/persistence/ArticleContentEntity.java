@@ -38,6 +38,9 @@ class ArticleContentEntity {
     @Column(nullable = false, length = 35)
     private String language;
 
+    @Column(nullable = false, length = 255)
+    private String author;
+
     @Column(nullable = false)
     private int version;
 

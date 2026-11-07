@@ -28,7 +28,7 @@ class NewsItemXmlRendererTest {
     void documentStartsWithTheXmlDeclaration() {
         ArticleContent article = ArticleContent.create(
                 "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
-                "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
+                "Sipho Dlamini", "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
 
         assertThat(renderer.render(article)).startsWith("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
     }
@@ -38,7 +38,7 @@ class NewsItemXmlRendererTest {
     void standardIsNewsMlG2() throws Exception {
         ArticleContent article = ArticleContent.create(
                 "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
-                "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
+                "Sipho Dlamini", "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
 
         Element newsItem = parse(renderer.render(article));
 
@@ -50,7 +50,7 @@ class NewsItemXmlRendererTest {
     void guidIsTheNewsItemGuid() throws Exception {
         ArticleContent article = ArticleContent.create(
                 "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
-                "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
+                "Sipho Dlamini", "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
 
         Element newsItem = parse(renderer.render(article));
 
@@ -62,7 +62,7 @@ class NewsItemXmlRendererTest {
     void versionIsTheNewsItemVersion() throws Exception {
         ArticleContent article = ArticleContent.create(
                 "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
-                "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
+                "Sipho Dlamini", "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
 
         Element newsItem = parse(renderer.render(article));
 
@@ -74,7 +74,7 @@ class NewsItemXmlRendererTest {
     void standardVersionIs234() throws Exception {
         ArticleContent article = ArticleContent.create(
                 "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
-                "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
+                "Sipho Dlamini", "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
 
         Element newsItem = parse(renderer.render(article));
 
@@ -86,7 +86,7 @@ class NewsItemXmlRendererTest {
     void xmlLangIsTheJournalistsLanguage() throws Exception {
         ArticleContent article = ArticleContent.create(
                 "Izikhukhula eKapa", "Imvula ina kakhulu.", "zu-ZA",
-                "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
+                "Sipho Dlamini", "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
 
         Element newsItem = parse(renderer.render(article));
 
@@ -98,7 +98,7 @@ class NewsItemXmlRendererTest {
     void catalogRefIsTheIptcCatalog() throws Exception {
         ArticleContent article = ArticleContent.create(
                 "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
-                "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
+                "Sipho Dlamini", "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
 
         Element newsItem = parse(renderer.render(article));
 
@@ -111,7 +111,7 @@ class NewsItemXmlRendererTest {
     void itemClassIsText() throws Exception {
         ArticleContent article = ArticleContent.create(
                 "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
-                "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
+                "Sipho Dlamini", "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
 
         Element newsItem = parse(renderer.render(article));
 
@@ -126,7 +126,7 @@ class NewsItemXmlRendererTest {
         NewsItemXmlRenderer configuredRenderer = new NewsItemXmlRenderer("example.org");
         ArticleContent article = ArticleContent.create(
                 "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
-                "example.org", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
+                "Sipho Dlamini", "example.org", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
 
         Element newsItem = parse(configuredRenderer.render(article));
 
@@ -140,7 +140,7 @@ class NewsItemXmlRendererTest {
     void pubStatusIsUsable() throws Exception {
         ArticleContent article = ArticleContent.create(
                 "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
-                "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
+                "Sipho Dlamini", "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
 
         Element newsItem = parse(renderer.render(article));
 
@@ -154,7 +154,7 @@ class NewsItemXmlRendererTest {
     void headlineIsTheJournalistsHeadline() throws Exception {
         ArticleContent article = ArticleContent.create(
                 "Dam levels rise", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
-                "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
+                "Sipho Dlamini", "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
 
         Element newsItem = parse(renderer.render(article));
 
@@ -168,7 +168,7 @@ class NewsItemXmlRendererTest {
     void versionCreatedIsTheCreationTimestampWithItsOffset() throws Exception {
         ArticleContent article = ArticleContent.create(
                 "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
-                "springbok.space", OffsetDateTime.parse("2026-03-01T14:05:09-05:00"), "3f2b9c1e");
+                "Sipho Dlamini", "springbok.space", OffsetDateTime.parse("2026-03-01T14:05:09-05:00"), "3f2b9c1e");
 
         Element newsItem = parse(renderer.render(article));
 
@@ -182,7 +182,7 @@ class NewsItemXmlRendererTest {
     void bodyParagraphsAreRenderedAsXhtmlParagraphsInOrder() throws Exception {
         ArticleContent article = ArticleContent.create(
                 "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
-                "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
+                "Sipho Dlamini", "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
 
         Element newsItem = parse(renderer.render(article));
 
@@ -197,7 +197,7 @@ class NewsItemXmlRendererTest {
     void crlfSeparatedParagraphsAreRenderedAsSeparateParagraphElements() throws Exception {
         ArticleContent article = ArticleContent.create(
                 "Floods hit Cape Town", "Rain fell.\r\n\r\nRoads closed.", "en",
-                "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
+                "Sipho Dlamini", "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
 
         Element newsItem = parse(renderer.render(article));
 
@@ -212,7 +212,7 @@ class NewsItemXmlRendererTest {
     void inlineXmlContentTypeIsXhtml() throws Exception {
         ArticleContent article = ArticleContent.create(
                 "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
-                "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
+                "Sipho Dlamini", "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
 
         Element newsItem = parse(renderer.render(article));
 

@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
  * GUID the system gives the item when it is created.
  */
 public record ArticleContent(NewsItemGuid guid, String headline, String body, String language,
-                             int version, OffsetDateTime versionCreated) {
+                             String author, int version, OffsetDateTime versionCreated) {
 
     private static final int INITIAL_VERSION = 1;
 
@@ -22,19 +22,19 @@ public record ArticleContent(NewsItemGuid guid, String headline, String body, St
         requireText(body, "body");
         requireText(language, "language");
         requireWellFormedLanguageTag(language);
+        requireText(author, "author");
     }
 
-    public static ArticleContent create(String headline, String body, String language,
+    public static ArticleContent create(String headline, String body, String language, String author,
                                         String provider, OffsetDateTime createdAt, String uniqueId) {
         return new ArticleContent(
                 NewsItemGuid.create(provider, createdAt.toLocalDate(), uniqueId),
-                headline, body, language, INITIAL_VERSION, createdAt);
+                headline, body, language, author, INITIAL_VERSION, createdAt);
     }
 
     public ArticleContent update(String headline, String body, String language, String author,
                                  OffsetDateTime updatedAt) {
-        requireText(author, "author");
-        return new ArticleContent(guid, headline, body, language, version + 1, updatedAt);
+        return new ArticleContent(guid, headline, body, language, author, version + 1, updatedAt);
     }
 
     private static void requireWellFormedLanguageTag(String language) {
