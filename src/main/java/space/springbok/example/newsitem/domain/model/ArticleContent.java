@@ -33,7 +33,10 @@ public record ArticleContent(NewsItemGuid guid, String headline, String body, St
     }
 
     public ArticleContent update(String headline, String body, String language, String author,
-                                 int editedVersion, OffsetDateTime updatedAt) {
+                                 Integer editedVersion, OffsetDateTime updatedAt) {
+        if (editedVersion == null) {
+            throw new MissingRequiredFieldException("version");
+        }
         if (editedVersion != version) {
             throw new VersionConflictException();
         }

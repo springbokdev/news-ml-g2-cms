@@ -144,6 +144,22 @@ class ArticleContentTest {
                     .extracting("field")
                     .isEqualTo("author");
         }
+
+        @Test
+        @DisplayName("The one where the version the editor edited is missing, and the update is rejected: version required")
+        void missingEditedVersionIsRejected() {
+            ArticleContent version1 = ArticleContent.create(
+                    "Floods hit Cape Town", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
+                    "Sipho Dlamini", "springbok.space", OffsetDateTime.parse("2026-10-16T09:30:00+02:00"), "3f2b9c1e");
+
+            assertThatThrownBy(() -> version1.update(
+                    "Floods hit Cape Town, two dead", "Rain fell.\n\nRoads closed.\n\nSchools shut.", "en",
+                    "Thandi Nkosi", null, OffsetDateTime.parse("2026-10-17T08:15:00+02:00")))
+                    .isInstanceOf(MissingRequiredFieldException.class)
+                    .hasMessage("version required")
+                    .extracting("field")
+                    .isEqualTo("version");
+        }
     }
 
     @Nested
